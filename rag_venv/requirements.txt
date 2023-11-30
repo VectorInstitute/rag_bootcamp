@@ -1,0 +1,10 @@
+torch==2.0.0+cu117 torchvision==0.15.0+cu117 -f https://download.pytorch.org/whl/torch_stable.html
+sentencepiece
+protobuf
+transformers
+accelerate
+pandas
+vllm
+ray
+openai==0.27.2
+gpustat # gpustat -i 2
