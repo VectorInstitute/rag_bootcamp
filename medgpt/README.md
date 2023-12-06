@@ -1,6 +1,6 @@
-# RAG Demo
+# MedGPT RAG Demo
 
-This is a simple demo showing how to use RAG capabilities against a Llama2 model for improved results.
+This is a simple demo showing how to use RAG capabilities to augment a Llama2 model, providing improved results for medical-domain queries.
 
 ## Usage Instructions
 
@@ -17,5 +17,6 @@ source rag_venv/bin/activate
 ### Run the Demo
 
 ```
-python3 ./rag.py
+cd /ssd003/projects/aieng/public/rag_bootcamp/medgpt
+python3 ./medgpt-rag.py
 ```

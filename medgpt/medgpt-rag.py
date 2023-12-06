@@ -157,17 +157,18 @@ class VectorDB:
 
 def demo_input_loop(db, embedding_model, reranker_model, rag_llm, k = 5):
     queries = ["A 27-year-old male presents to urgent care complaining of pain with urination. He reports that the pain started 3 days ago. He has never experienced these symptoms before. He denies gross hematuria or pelvic pain. He is sexually active with his girlfriend, and they consistently use condoms. When asked about recent travel, he admits to recently returning from a boys’ trip” in Cancun where he had unprotected sex 1 night with a girl he met at a bar. The patients medical history includes type I diabetes that is controlled with an insulin pump. His mother has rheumatoid arthritis. The patients temperature is 99 F (37.2 C), blood pressure is 112/74 mmHg, and pulse is 81/min. On physical examination, there are no lesions of the penis or other body rashes. No costovertebral tenderness is appreciated. A urinalysis reveals no blood, glucose, ketones, or proteins but is positive for leukocyte esterase. A urine microscopic evaluation shows a moderate number of white blood cells but no casts or crystals. A urine culture is negative. Which of the following is the most likely cause for the patient’s symptoms? A: Chlamydia trachomatis, B: Systemic lupus erythematosus, C: Mycobacterium tuberculosis, D: Treponema pallidum"]
+    print(f"Starting demo_input_loop")
     while len(queries) != 0:
         for q in queries:
-            print(q + "\n")
+            print(f"Query: {q} \n")
 
-        print("*** Retrieving... ***")
+        print("*** Retrieving embedded queries... ***")
         embedded_queries = embedding_model(queries)
         retrieved = db.topk_cosine(embedded_queries, k = 50) # hard coded
         
         for r in retrieved:
             for i in range(len(r)):
-                print(f"[{i}] " + r[i] + "\n")
+                print(f"Retrieved: [{i}] {r[i]} \n")
 
         print("*** Reranking... ***")
         reranked = reranker_model(queries, retrieved, k = k)
@@ -179,22 +180,24 @@ def demo_input_loop(db, embedding_model, reranker_model, rag_llm, k = 5):
         print("*** Query Only ***")
         generations = rag_llm(queries, [[] for _ in range(len(queries))])
         for g in generations:
-            print(g + "\n")
+            print(f"Generation: {g} \n")
         
         print(f"*** Retrieval Only (k = {k})")
         generations = rag_llm(queries, [r[:k] for r in retrieved])
         for g in generations:
-            print(g + "\n")
+            print(f"Retreival only generation: {g} \n")
 
         print(f"*** Retrieval + Reranking (k = 50 -> k = {k}) ***")
         generations = rag_llm(queries, reranked)
         for g in generations:
-            print(g + "\n")
+            print(f"Retrieval + reranking generation: {g} \n")
 
         user_input = input("Another question? (ENTER to exit): ")
         queries.pop()
         if user_input.strip() != "":
             queries.append(user_input)
+        else:
+            print(f"Exiting")
 
 
 class Task:
