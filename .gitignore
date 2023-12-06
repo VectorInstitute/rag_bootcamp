@@ -1,0 +1,6 @@
+# env folders
+env/
+venv/
+
+# data folders
+data/
