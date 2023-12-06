@@ -1,31 +1,38 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-import openai # pip install openai
+from openai import OpenAI
 import os
 import torch
 
 
 try:
-    openai.api_key = open(Path.home() / ".openai.key", "r").read().strip()
+    openai_api_key = open(Path.home() / ".openai.key", "r").read().strip()
 except Exception as err:
     print(f"Failed to retrieve your OpenAI key. Make sure there is a file in your home directory called .openai.key containing the key in plain text. Error: {err}")
     exit()
 
-#openai.api_base = "http://172.17.8.185:8000/v1"
-openai.api_base = "http://api.openai.com/v1"
+openai_client = OpenAI(
+    api_key = openai_api_key
+)
 
-#unused_model_path = "/scratch/ssd002/projects/opt_test/Llama-2-70b-chat-hf" # artifact of pip package
-#unused_model_path = "/scratch/ssd002/projects/opt_test/Llama-2-7b-chat-hf" # artifact of pip package
-model_path = "/scratch/ssd002/projects/opt_test/Llama-2-7b-chat-hf"
-
-completion = openai.Completion.create(model=model_path, prompt="San Francisco is a", max_tokens=256)
+completion = openai_client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": "San Francisco is a",
+        }
+    ],
+    model="gpt-3.5-turbo",
+    max_tokens=256
+)
 print(completion)
 
 encoder_path = "/checkpoint/opt_test/original/clinical_llm/models--BAAI--bge-large-zh-v1.5/snapshots/b5c9d86d763d9945f7c0a73e549a4a39c423d520/"
-reranker_path = ""
 rag_path = "/scratch/ssd002/projects/opt_test/clinical_llm/datasets/rag"
 key_path = os.path.join(rag_path, "test_embeddings.pt")
+model_path = "/scratch/ssd002/projects/opt_test/Llama-2-7b-chat-hf"
+reranker_path = ""
 value_path = os.path.join(rag_path, "test_text.pt")
 
 # pip install -U FlagEmbedding
@@ -91,12 +98,26 @@ class AugmentedLLM:
 
             prompt = self.metaprompt + "".join([f"[{j}] " + e[j] + "\n" for j in range(len(e))]) + query + "\nAnswer:"
             print(f"About to call OpenAI Completion with prompt: {prompt}")
+            out = openai_client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                #model=model_path,
+                model="gpt-3.5-turbo",
+                max_tokens=max_tokens,
+                **kwargs
+            )
+            """
             out = openai.Completion.create(model = model_path, 
                                            prompt = prompt, 
                                            max_tokens = max_tokens,
                                            temperature = 0,
                                            **kwargs)
-            generations.append(out.choices[0].text) # TODO can also return logprobs for eval
+            """
+            generations.append(out.choices[0].message.content) # TODO can also return logprobs for eval
         return generations
     
     def logprob(self, queries, evidence, choices, **kwargs):
