@@ -4,3 +4,9 @@ venv/
 
 # data folders
 data/
+
+# keys
+.openai_key
+
+# cache
+__pycache__/
