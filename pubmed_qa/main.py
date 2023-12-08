@@ -1,5 +1,6 @@
 import os
 import argparse
+import random
 # import chromadb
 
 from pathlib import Path
@@ -38,6 +39,7 @@ def main():
     # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
     llama_index.set_global_handler("simple")
     
+
     ### LOADING STAGE
     # 1. Load data
     print('Loading documents ...')
@@ -53,8 +55,9 @@ def main():
     # nodes = node_parser.get_nodes_from_documents(docs)
     # print(len(nodes))
 
+
     ### INDEXING STAGE
-    # Load embedding model
+    # 1. Load embedding model
     # Llama-index supports embedding models from OpenAI, Cohere, LangChain, HuggingFace, etc. 
     # We can also build out custom embedding model.
     # https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings.html
@@ -104,6 +107,8 @@ def main():
     )
     set_global_service_context(service_context)
 
+    # 2. Create/load index using the appropriate vector store
+    index = VectorStoreIndex.from_documents(docs) # storage_context=storage_context
     # # Use storage context to set custom vector store
     # # Available options: https://docs.llamaindex.ai/en/stable/module_guides/storing/vector_stores.html
     # # Use Chroma: https://docs.llamaindex.ai/en/stable/examples/vector_stores/ChromaIndexDemo.html
@@ -113,34 +118,31 @@ def main():
     # vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     # storage_context = StorageContext.from_defaults(vector_store=vector_store)
     # TODO - Fix package issue with Chroma
-
-    # # Create the index
-    # index = VectorStoreIndex.from_documents(docs) # storage_context=storage_context
     
-    # # # Persist index to disk and reload
-    # # persist_dir="./index_store/"
-    # # index.storage_context.persist(persist_dir=persist_dir)
-    # # storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
-    # # index = load_index_from_storage(storage_context)
+    # # Persist index to disk and reload
+    # persist_dir="./index_store/"
+    # index.storage_context.persist(persist_dir=persist_dir)
+    # storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
+    # index = load_index_from_storage(storage_context)
 
 
-    # ### QUERYING STAGE
-    # # Now build a query engine using retriever, response_synthesizer and node_postprocessor (add this later)
-    # # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html
-    # # TODO - Check other args for RetrieverQueryEngine
+    ### QUERYING STAGE
+    # Now build a query engine using retriever, response_synthesizer and node_postprocessor (add this later)
+    # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html
+    # TODO - Check other args for RetrieverQueryEngine
 
-    # # Other retrievers can be used based on the type of index: List, Tree, Knowledge Graph, etc.
-    # # https://docs.llamaindex.ai/en/stable/api_reference/query/retrievers.html
-    # # Find LlamaIndex equivalents for the following:
-    # # Check MultiQueryRetriever from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/MultiQueryRetriever
-    # # Check Contextual compression from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/contextual_compression/
-    # # Check Ensemble Retriever from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/ensemble
-    # # Check self-query from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/self_query
-    # # Check WebSearchRetriever from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/web_research
-    # retriever = VectorIndexRetriever(
-    #     index=index,
-    #     similarity_top_k=5,
-    #     )
+    # Other retrievers can be used based on the type of index: List, Tree, Knowledge Graph, etc.
+    # https://docs.llamaindex.ai/en/stable/api_reference/query/retrievers.html
+    # Find LlamaIndex equivalents for the following:
+    # Check MultiQueryRetriever from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/MultiQueryRetriever
+    # Check Contextual compression from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/contextual_compression/
+    # Check Ensemble Retriever from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/ensemble
+    # Check self-query from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/self_query
+    # Check WebSearchRetriever from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/web_research
+    retriever = VectorIndexRetriever(
+        index=index,
+        similarity_top_k=5,
+        )
 
     # # Node postprocessor: Porcessing nodes after retrieval before passing to the LLM for generation
     # # Re-ranking step can be performed here!
@@ -154,22 +156,27 @@ def main():
     #         percentile_cutoff=0.5
     #         )]
 
-    # response_synthesizer = get_response_synthesizer()
+    response_synthesizer = get_response_synthesizer()
 
-    # query_engine = RetrieverQueryEngine(
-    #     retriever=retriever,
-    #     response_synthesizer=response_synthesizer,
-    #     node_postprocessors=node_postprocessor
-    # )
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+        # node_postprocessors=node_postprocessor
+    )
 
-    # # Finally query the model!
-    # query = "Describe the model editing method used in the paper?"
-    # response = query_engine.query(query)
+    # Finally query the model!
+    random.seed()
+    sample_idx = random.randint(0, len(pubmed_data)-1)
+    sample_elm = pubmed_data[sample_idx]
+    # print(sample_elm)
 
-    # print(f"{''.join(['*']*50)}")
-    # print(f"chunk args: {(chunk_size, chunk_overlap)}\n")
-    # print(f"response: {response}\n")
+    query = sample_elm['question']
+    response = query_engine.query(query)
 
+    print(f'QUERY: {query}')
+    print(f'RESPONSE: {response}')
+    print(f'GT ANSWER: {sample_elm["answer"]}')
+    print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
 
 
 if __name__ == "__main__":
