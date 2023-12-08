@@ -1,4 +1,5 @@
 import os
+import json
 import torch.utils.data as data
 from tqdm import tqdm
 from datasets import load_dataset, concatenate_datasets
@@ -35,7 +36,7 @@ class PubMedQATaskDataset(data.Dataset):
     def __len__(self):
         return len(self.data)
 
-    def mock_knowledge_base(self, output_dir, samples_per_file=500, sep='\n'):
+    def mock_knowledge_base(self, output_dir, samples_per_file=500, sep='\n', jsonl=False):
         """
         Write PubMed contexts to a text file, newline seperated
         """
@@ -48,9 +49,14 @@ class PubMedQATaskDataset(data.Dataset):
             if (idx + 1) % samples_per_file == 0:
                 context_files.append(context_str.rstrip(sep))
             else:
-                context_str += f'{self.data[idx]["context"]}{sep}'
+                if jsonl:
+                    context_elm_str = json.dumps({'id': self.data[idx]["id"],'context': self.data[idx]["context"]})
+                else:
+                    context_elm_str = self.data[idx]["context"]
+                context_str += f'{context_elm_str}{sep}'
 
+        file_ext = 'jsonl' if jsonl else 'txt'
         for file_idx in range(len(context_files)):
-            filepath = os.path.join(pubmed_kb_dir, f'context{file_idx}.txt')
+            filepath = os.path.join(pubmed_kb_dir, f'context{file_idx}.{file_ext}')
             with open(filepath, 'w') as f:
                 f.write(context_files[file_idx])
