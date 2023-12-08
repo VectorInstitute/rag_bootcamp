@@ -7,6 +7,7 @@ from llama_index import (
     SimpleDirectoryReader, VectorStoreIndex, ServiceContext, 
     set_global_service_context, load_index_from_storage, get_response_synthesizer,
 )
+from llama_index.readers import JSONReader
 from llama_index.embeddings import HuggingFaceEmbedding
 from llama_index.llms import HuggingFaceLLM
 from llama_index.text_splitter import SentenceSplitter
@@ -18,53 +19,25 @@ from llama_index.postprocessor import SimilarityPostprocessor, LLMRerank, Senten
 from llama_index.schema import MetadataMode
 
 from task_dataset import PubMedQATaskDataset
+from rag_utils import DocumentReader
 
 
 def main():
 
     pubmed_data = PubMedQATaskDataset('bigbio/pubmed_qa')
-    # print(len(pubmed_data))
+    print(len(pubmed_data))
     # print(pubmed_data[9])
-    pubmed_data.mock_knowledge_base(output_dir='./data')
+    # pubmed_data.mock_knowledge_base(output_dir='./data')
 
     # # Set handler for debugging
     # # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
     # llama_index.set_global_handler("simple")
     
-    # ### LOADING STAGE
-    # # Load data
-    # reader = SimpleDirectoryReader(input_dir="./data/")
-    # docs = reader.load_data() # Obtain a list of documents
-    # print(f"Loaded {len(docs)} docs")
-    # # TODO - Explore: Can choose if metadata need to be included as input 
-    # # when passing the doc to LLM or embeddings: https://docs.llamaindex.ai/en/stable/module_guides/loading/documents_and_nodes/usage_documents.html
-    # # print(docs[4].get_content(metadata_mode=MetadataMode.LLM))
-    # all_metadata_keys = list(docs[0].metadata.keys())
-    # for doc in docs:
-    #     doc.excluded_llm_metadata_keys = all_metadata_keys
-    # # print(docs[4].get_content(metadata_mode=MetadataMode.LLM))
-
-    # ### INDEXING STAGE
-    # # Set embeddings
-    # # Llama-index supports embedding models from OpenAI, Cohere, LangChain, HuggingFace, etc. 
-    # # We can also build out custom embedding model.
-    # # https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings.html
-    # # Using HuggingFace embeddings, leaderboard: https://huggingface.co/spaces/mteb/leaderboard
-    # embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
-
-    # # Set custom LLM
-    # # Llama-index supports OpenAI, Cohere, AI21 and HuggingFace LLMs
-    # # https://docs.llamaindex.ai/en/stable/module_guides/models/llms/usage_custom.html
-    # # Using HuggingFace LLM Llama-2-7b
-    # llm = HuggingFaceLLM(
-    #     tokenizer_name="/model-weights/Llama-2-7b-hf",
-    #     model_name="/model-weights/Llama-2-7b-hf",
-    #     context_window=4096,
-    #     max_new_tokens=128,
-    #     generate_kwargs={"temperature": 0.8},
-    #     device_map="auto",
-    #     # model_kwargs={"torch_dtype": torch.float16, "load_in_8bit": True},
-    # )
+    ### LOADING STAGE
+    # Load data
+    reader = DocumentReader(input_dir="./data/pubmed_doc")
+    docs = reader.load_data()
+    print(f'No. of documents loaded: {len(docs)}')
 
     # chunk_arg_list = [(512, 32), (1024, 128)]
     # for (chunk_size, chunk_overlap) in chunk_arg_list:
