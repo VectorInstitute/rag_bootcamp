@@ -163,19 +163,22 @@ def demo_input_loop(db, embedding_model, reranker_model, rag_llm, k = 5):
             print(f"Query: {q} \n")
 
         print("*** Retrieving embedded queries... ***")
+        print(f"Calling embedding_model with queries: {queries}")
         embedded_queries = embedding_model(queries)
+        print(f"About to make retrievals from vector db with embedded_queries: {embedded_queries}")
         retrieved = db.topk_cosine(embedded_queries, k = 50) # hard coded
         
         for r in retrieved:
             for i in range(len(r)):
                 print(f"Retrieved: [{i}] {r[i]} \n")
 
-        print("*** Reranking... ***")
+        print(f"*** Reranking... ***")
+
         reranked = reranker_model(queries, retrieved, k = k)
 
         for r in reranked:
             for i in range(len(r)):
-                print(f"[{i}] " + r[i] + "\n")
+                print(f"Reranked: [{i}] {r[i]} \n")
 
         print("*** Query Only ***")
         generations = rag_llm(queries, [[] for _ in range(len(queries))])
