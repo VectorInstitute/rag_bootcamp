@@ -4,17 +4,15 @@
 
 from getpass import getpass
 import os
-import openai
 from pathlib import Path
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
 from langchain.document_loaders import TextLoader
 from langchain.vectorstores import FAISS
 from langchain.document_loaders.pdf import PyPDFDirectoryLoader
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatCohere
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CohereRerank
 from langchain.schema import HumanMessage, SystemMessage
@@ -32,21 +30,17 @@ def main():
 
     # Setup the environment
     os.environ["COHERE_API_KEY"] = open(Path.home() / ".cohere.key", "r").read().strip()
-    os.environ["OPENAI_API_KEY"] = open(Path.home() / ".openai.key", "r").read().strip()
     if not os.path.exists("source-materials"):
         os.mkdir("source-materials")
 
     # Start with making a generation request without RAG augmentation
     query = "What is Vector Institute doing to address AI safety and trustworthiness?"
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k",temperature=0.1)
+    llm = ChatCohere()
     print(f"Sending non-RAG augmented generation request for query: {query}")
     message = [
-        SystemMessage(
-            content=query
-        ),
         HumanMessage(
             content=query
-        ),
+        )
     ]
     result = llm(message)
     print(f"Result: {result}")
