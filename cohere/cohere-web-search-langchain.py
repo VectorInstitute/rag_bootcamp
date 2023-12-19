@@ -48,11 +48,9 @@ def main():
     print(f"Now retrieve results from a Google web search for the same query")
     result_text = ""
     for result_url in search(query, tld="com", num=10, stop=10, pause=2):
-        response = requests.get("https://en.wikipedia.org/wiki/List_of_World_Series_champions")
+        response = requests.get(result_url)
         soup = BeautifulSoup(response.content, 'html.parser')
         result_text = result_text + soup.get_text()
-
-    #print(result_text)
 
     # Split the result text into smaller chunks
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
