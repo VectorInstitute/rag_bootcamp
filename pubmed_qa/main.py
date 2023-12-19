@@ -1,12 +1,13 @@
 import os
 import argparse
 import random
-# import chromadb
+import chromadb
+import re
 
 from pathlib import Path
 import llama_index
 from llama_index import (
-    VectorStoreIndex, ServiceContext, 
+    VectorStoreIndex, ServiceContext, PromptTemplate,
     set_global_service_context, load_index_from_storage, get_response_synthesizer,
 )
 from llama_index.embeddings import HuggingFaceEmbedding, OpenAIEmbedding
@@ -20,7 +21,7 @@ from llama_index.postprocessor import SimilarityPostprocessor, LLMRerank, Senten
 from llama_index.schema import MetadataMode
 
 from task_dataset import PubMedQATaskDataset
-from rag_utils import DocumentReader
+from rag_utils import DocumentReader, extract_yes_no, evaluate
 
 
 def main():
@@ -35,9 +36,9 @@ def main():
     # print(pubmed_data[9])
     # pubmed_data.mock_knowledge_base(output_dir='./data')
 
-    # Set handler for debugging
-    # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
-    llama_index.set_global_handler("simple")
+    # # Set handler for debugging
+    # # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
+    # llama_index.set_global_handler("simple")
     
 
     ### LOADING STAGE
@@ -84,12 +85,12 @@ def main():
     print(f'Loading {llm_type} LLM model ...')
     if llm_type == 'local':
         llm = HuggingFaceLLM(
-            tokenizer_name="/model-weights/Llama-2-7b-hf",
-            model_name="/model-weights/Llama-2-7b-hf",
+            tokenizer_name="/model-weights/Llama-2-7b-chat-hf",
+            model_name="/model-weights/Llama-2-7b-chat-hf",
             device_map="auto",
             context_window=4096,
-            max_new_tokens=128,
-            generate_kwargs={"temperature": 0.8},
+            max_new_tokens=256,
+            generate_kwargs={"temperature": 1.0, "top_p": 1.0, "do_sample": False}, # greedy decoding
             # model_kwargs={"torch_dtype": torch.float16, "load_in_8bit": True},
         )
     elif llm_type == 'openai':
@@ -108,16 +109,15 @@ def main():
     set_global_service_context(service_context)
 
     # 2. Create/load index using the appropriate vector store
-    index = VectorStoreIndex.from_documents(docs) # storage_context=storage_context
-    # # Use storage context to set custom vector store
-    # # Available options: https://docs.llamaindex.ai/en/stable/module_guides/storing/vector_stores.html
-    # # Use Chroma: https://docs.llamaindex.ai/en/stable/examples/vector_stores/ChromaIndexDemo.html
-    # # LangChain vector stores: https://python.langchain.com/docs/modules/data_connection/vectorstores/
-    # chroma_client = chromadb.EphemeralClient()
-    # chroma_collection = chroma_client.create_collection("quickstart")
-    # vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    # storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    # TODO - Fix package issue with Chroma
+    # Use storage context to set custom vector store
+    # Available options: https://docs.llamaindex.ai/en/stable/module_guides/storing/vector_stores.html
+    # Use Chroma: https://docs.llamaindex.ai/en/stable/examples/vector_stores/ChromaIndexDemo.html
+    # LangChain vector stores: https://python.langchain.com/docs/modules/data_connection/vectorstores/
+    chroma_client = chromadb.Client()
+    chroma_collection = chroma_client.create_collection(name="pubmed_qa")
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    index = VectorStoreIndex.from_documents(docs, storage_context=storage_context)
     
     # # Persist index to disk and reload
     # persist_dir="./index_store/"
@@ -141,7 +141,7 @@ def main():
     # Check WebSearchRetriever from LangChain: https://python.langchain.com/docs/modules/data_connection/retrievers/web_research
     retriever = VectorIndexRetriever(
         index=index,
-        similarity_top_k=5,
+        similarity_top_k=3,
         )
 
     # # Node postprocessor: Porcessing nodes after retrieval before passing to the LLM for generation
@@ -156,27 +156,58 @@ def main():
     #         percentile_cutoff=0.5
     #         )]
 
-    response_synthesizer = get_response_synthesizer()
+    # Other response modes: https://docs.llamaindex.ai/en/stable/module_guides/querying/response_synthesizers/root.html#configuring-the-response-mode
+    qa_prompt_tmpl = (
+    "Context information is below.\n"
+    "---------------------\n"
+    "{context_str}\n"
+    "---------------------\n"
+    "Given the context information and not prior knowledge, answer the query. "
+    "If your answer is in favour of the query, end your response with 'yes' otherwise end your response with 'no'.\n"
+    "Query: {query_str}\n"
+    "Answer: "
+    )
+    llama2_chat_tmpl = ("<s>[INST] <<SYS>>\n{sys_msg}\n<</SYS>>\n\n{qa_prompt} [/INST]")
+    llama2_chat_sys_msg = (
+        "You are a helpful and honest assistant. "
+        "Your answer should only be based on the context information provided."
+    )
+    qa_prompt_tmpl = llama2_chat_tmpl.format_map({'sys_msg': llama2_chat_sys_msg, 'qa_prompt': qa_prompt_tmpl})
+    qa_prompt_tmpl = PromptTemplate(qa_prompt_tmpl)
+    response_synthesizer = get_response_synthesizer(response_mode='compact', text_qa_template=qa_prompt_tmpl) # compact
 
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
-        response_synthesizer=response_synthesizer,
         # node_postprocessors=node_postprocessor
+        response_synthesizer=response_synthesizer,
     )
 
-    # Finally query the model!
-    random.seed()
-    sample_idx = random.randint(0, len(pubmed_data)-1)
-    sample_elm = pubmed_data[sample_idx]
-    # print(sample_elm)
+    # # Finally query the model!
+    # random.seed(41)
+    # sample_idx = random.randint(0, len(pubmed_data)-1)
+    # sample_elm = pubmed_data[sample_idx]
+    # # print(sample_elm)
 
-    query = sample_elm['question']
-    response = query_engine.query(query)
+    # query = sample_elm['question']
+    # print(f'QUERY: {query}\n')
 
-    print(f'QUERY: {query}')
-    print(f'RESPONSE: {response}')
-    print(f'GT ANSWER: {sample_elm["answer"]}')
-    print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
+    # retrieved_nodes = retriever.retrieve(query)
+    # for node in retrieved_nodes:
+    #     print(node.text)
+    #     print(node.score)
+    #     print('\n')
+
+    # response = query_engine.query(query)
+
+    # print(f'QUERY: {query}')
+    # print(f'RESPONSE: {response}')
+    # print(f'YES/NO: {extract_yes_no(response.response)}')
+    # print(f'GT ANSWER: {sample_elm["answer"]}')
+    # print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
+
+    # pubmed_data = pubmed_data[:5]
+
+    print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}')
 
 
 if __name__ == "__main__":
