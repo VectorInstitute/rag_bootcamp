@@ -94,6 +94,13 @@ def main():
     compressed_docs = compression_retriever.get_relevant_documents(query)
     pretty_print_docs(compressed_docs)
 
+    # Generation — RAG Pipeline using compressor retriever
+    qa = RetrievalQA.from_chain_type(llm=llm,
+            chain_type="stuff",
+            retriever=compression_retriever)
+    
+    print(qa.run(query=query))
+
 
 if __name__ == "__main__":
     main()
