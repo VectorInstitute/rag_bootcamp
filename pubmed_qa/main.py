@@ -41,9 +41,9 @@ def main():
         "response_mode": "compact",
     }
 
-    # Set handler for debugging
-    # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
-    set_global_handler("simple")
+    # # Set handler for debugging
+    # # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
+    # set_global_handler("simple")
 
 
     ### STAGE 1 - Load data and documents
@@ -51,7 +51,6 @@ def main():
     print('Loading PubMed QA data ...')
     pubmed_data = PubMedQATaskDataset('bigbio/pubmed_qa')
     print(len(pubmed_data))
-    # print(pubmed_data[9])
     # pubmed_data.mock_knowledge_base(output_dir='./data')
 
     # 2. Load documents
@@ -95,27 +94,27 @@ def main():
             similarity_top_k=rag_cfg['retriever_similarity_top_k'], response_mode=rag_cfg['response_mode'])
 
 
-    # Finally query the model!
-    random.seed(41)
-    sample_idx = random.randint(0, len(pubmed_data)-1)
-    sample_elm = pubmed_data[sample_idx]
-    # print(sample_elm)
+    # # Finally query the model!
+    # random.seed(41)
+    # sample_idx = random.randint(0, len(pubmed_data)-1)
+    # sample_elm = pubmed_data[sample_idx]
+    # # print(sample_elm)
 
-    query = sample_elm['question']
-    response = query_engine.query(query)
-    print(f'QUERY: {query}')
-    print(f'RESPONSE: {response}')
-    print(f'YES/NO: {extract_yes_no(response.response)}')
-    print(f'GT ANSWER: {sample_elm["answer"]}')
-    print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
+    # query = sample_elm['question']
+    # response = query_engine.query(query)
+    # print(f'QUERY: {query}')
+    # print(f'RESPONSE: {response}')
+    # print(f'YES/NO: {extract_yes_no(response.response)}')
+    # print(f'GT ANSWER: {sample_elm["answer"]}')
+    # print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
 
-    # retrieved_nodes = retriever.retrieve(query)
-    # for node in retrieved_nodes:
-    #     print(node.text)
-    #     print(node.score)
-    #     print('\n')
+    # # retrieved_nodes = retriever.retrieve(query)
+    # # for node in retrieved_nodes:
+    # #     print(node.text)
+    # #     print(node.score)
+    # #     print('\n')
 
-    # print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}')
+    print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}') # 500 samples, Overall Acc: 0.626
 
 
 if __name__ == "__main__":

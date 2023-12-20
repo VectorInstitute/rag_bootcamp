@@ -137,8 +137,7 @@ class RAGIndex():
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         index = VectorStoreIndex.from_documents(docs, storage_context=storage_context)
         if save:
-            if not os.path.isdir(self._persist_dir):
-                os.mkdir(self._persist_dir)
+            os.makedirs(self._persist_dir, exist_ok=True)
             index.storage_context.persist(persist_dir=self._persist_dir)
             # TODO - Figure out reload
 
