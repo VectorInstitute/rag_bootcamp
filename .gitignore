@@ -1,12 +1,15 @@
 # env folders
 env/
 venv/
+rag_venv/
 
 # data folders
 data/
+*/source-materials/
 
 # keys
 .openai_key
 
 # cache
 __pycache__/
+old/
