@@ -6,12 +6,10 @@ from getpass import getpass
 import os
 from pathlib import Path
 
-# llama_index doesn't support some OpenAI features, so we need to use the ones from langchain
-from langchain.chat_models import ChatCohere
-from langchain.schema import HumanMessage
-
+# We need to import the Cohere chat model from langchain because this doesn't exist in llama_index
 from llama_index import ServiceContext, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.cohereai import CohereEmbedding
+from llama_index.llms import Cohere
 from llama_index.postprocessor.cohere_rerank import CohereRerank
 
 
@@ -36,17 +34,12 @@ def main():
 
     # Start with making a generation request without RAG augmentation
     query = "What is Vector Institute doing to address AI safety and trustworthiness?"
-    llm = ChatCohere()
+    llm = Cohere(api_key=os.environ["COHERE_API_KEY"])
     print(f"*** Sending non-RAG augmented generation request for query: {query}\n")
-    message = [
-        HumanMessage(
-            content=query
-        )
-    ]
-    result = llm(message)
-    print(f"Result: {result.content}\n")
+    result = llm.complete(query)
+    print(f"Result: {result}\n")
 
-    # Load the pdf
+    # Load the pdfs
     pdf_folder_path = "./source-materials"
     print(f"*** Loading source materials from {pdf_folder_path}\n")
     documents = SimpleDirectoryReader(pdf_folder_path).load_data()

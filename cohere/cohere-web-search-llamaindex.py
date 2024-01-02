@@ -11,12 +11,9 @@ import requests
 
 from llama_index import VectorStoreIndex, ServiceContext
 from llama_index.embeddings.cohereai import CohereEmbedding
+from llama_index.llms import Cohere
 from llama_index.readers.string_iterable import StringIterableReader
 from llama_index.postprocessor.cohere_rerank import CohereRerank
-
-# We need to import the Cohere chat model from langchain because this doesn't exist in llama_index
-from langchain.chat_models import ChatCohere
-from langchain.schema import HumanMessage
 
 
 def pretty_print_docs(docs):
@@ -37,19 +34,13 @@ def main():
         print(f"Unable to read your Cohere API key. Make sure this is stored in a text file in your home directory at ~/.cohere.key")
 
     # Start with making a generation request without RAG augmentation
-    query = "Who won the last World Series of baseball, and in what year?"
-    llm = ChatCohere()
+    query = "Who won the 2023 World Series of baseball?"
+    llm = Cohere(api_key=os.environ["COHERE_API_KEY"])
     print(f"*** Sending non-RAG augmented generation request for query: {query}\n")
-    message = [
-        HumanMessage(
-            content=query
-        )
-    ]
-    result = llm(message)
-    print(f"Result: {result.content}\n")
+    result = llm.complete(query)
+    print(f"Result: {result}\n")
 
     print(f"*** Now retrieve results from a Google web search for the same query...")
-    #result_text = ""
     web_documents = []
     for result_url in search(query, tld="com", num=10, stop=10, pause=2):
         response = requests.get(result_url)
@@ -82,7 +73,8 @@ def main():
     print(f"*** Applying re-ranking with CohereRerank, and then sending the original query again\n")
     cohere_rerank = CohereRerank(top_n=3)
     query_engine = index.as_query_engine(
-        node_postprocessors = [cohere_rerank]
+        node_postprocessors = [cohere_rerank],
+        service_context = service_context
     )
 
     # Now ask the original query again, this time augmented with reranked results
