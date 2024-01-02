@@ -6,12 +6,13 @@ from getpass import getpass
 import os
 from pathlib import Path
 
+# llama_index doesn't support some OpenAI features, so we need to use the ones from langchain
 from langchain.chat_models import ChatCohere
 from langchain.schema import HumanMessage
+
 from llama_index import ServiceContext, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.cohereai import CohereEmbedding
 from llama_index.postprocessor.cohere_rerank import CohereRerank
-from llama_index.text_splitter import SentenceSplitter
 
 
 def pretty_print_docs(docs):
@@ -76,9 +77,9 @@ def main():
 
     # Apply reranking with CohereRerank
     print(f"*** Applying re-ranking with CohereRerank, and then sending the original query again\n")
-    cohere_rerank = CohereRerank(top_n=3)
+    reranker = CohereRerank()
     query_engine = index.as_query_engine(
-        node_postprocessors = [cohere_rerank]
+        node_postprocessors = [reranker]
     )
 
     # Now ask the original query again, this time augmented with reranked results
