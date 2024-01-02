@@ -2,7 +2,6 @@
 
 # Following code sample modified from https://medium.aiplanet.com/advanced-rag-cohere-re-ranker-99acc941601c
 
-from getpass import getpass
 import os
 from pathlib import Path
 
@@ -13,7 +12,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
 from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers import ChatGPTPluginRetriever
+from langchain.retrievers.document_compressors import EmbeddingsFilter
 from langchain.schema import HumanMessage
 
 
@@ -79,24 +78,23 @@ def main():
             retriever=retriever)
     print(f"*** Running generation: {qa.run(query=query)}")
 
-    """
-    # Applying Reranking with CohereRerank
-    print(f"*** Applying reranking with CohereRerank")
-    compressor = CohereRerank()
+    # Applying Reranking
+    print(f"*** Applying re-ranking")
+    embeddings = OpenAIEmbeddings()
+    embeddings_filter = EmbeddingsFilter(embeddings=embeddings, similarity_threshold=0.76)
     compression_retriever = ContextualCompressionRetriever(
-        base_compressor=compressor, base_retriever=retriever
+        base_compressor=embeddings_filter, base_retriever=retriever
     )
     compressed_docs = compression_retriever.get_relevant_documents(query)
     pretty_print_docs(compressed_docs)
 
     # Generation — RAG Pipeline using compressor retriever
+    print(f"*** Now doing the RAG generation augmented with reranked results:")
     qa = RetrievalQA.from_chain_type(llm=llm,
             chain_type="stuff",
             retriever=compression_retriever)
     
     print(qa.run(query=query))
-    """
-
 
 if __name__ == "__main__":
     main()
