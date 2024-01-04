@@ -67,7 +67,7 @@ def main():
     search_query_retriever = index.as_retriever(service_context=service_context)
     search_query_retrieved_nodes = search_query_retriever.retrieve(query)
     print(f"Search query retriever found {len(search_query_retrieved_nodes)} results")
-    print(f"First result example:\n{search_query_retrieved_nodes[0]}\n")
+    #print(f"First result example:\n{search_query_retrieved_nodes[0]}\n")
 
     # Apply reranking with CohereRerank
     print(f"*** Applying re-ranking with CohereRerank, and then sending the original query again\n")

@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
-# Following code sample modified from https://medium.aiplanet.com/advanced-rag-cohere-re-ranker-99acc941601c
-
 from getpass import getpass
 import os
 from pathlib import Path
 
-# We need to import the Cohere chat model from langchain because this doesn't exist in llama_index
 from llama_index import ServiceContext, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.cohereai import CohereEmbedding
 from llama_index.llms import Cohere

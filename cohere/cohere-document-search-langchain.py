@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# Following code sample modified from https://medium.aiplanet.com/advanced-rag-cohere-re-ranker-99acc941601c
-
 from getpass import getpass
 import os
 from pathlib import Path
@@ -10,6 +8,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import TextLoader
 from langchain.vectorstores import FAISS
 from langchain.document_loaders.pdf import PyPDFDirectoryLoader
+from langchain.llms import Cohere
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatCohere
@@ -30,22 +29,20 @@ def main():
 
     # Setup the environment
     os.environ["COHERE_API_KEY"] = open(Path.home() / ".cohere.key", "r").read().strip()
+
+    # Look for the source-materials folder and make sure there is at least 1 pdf file here
     if not os.path.exists("source-materials"):
+        print(f"
         os.mkdir("source-materials")
 
     # Start with making a generation request without RAG augmentation
     query = "What is Vector Institute doing to address AI safety and trustworthiness?"
-    llm = ChatCohere()
-    print(f"Sending non-RAG augmented generation request for query: {query}")
-    message = [
-        HumanMessage(
-            content=query
-        )
-    ]
-    result = llm(message)
-    print(f"Result: {result}")
+    llm = Cohere()
+    print(f"*** Sending non-RAG augmented generation request for query: {query}\n")
+    result = llm(query)
+    print(f"Result: {result}\n")
 
-    # Load the pdf
+    # Load the pdfs
     pdf_folder_path = "./source-materials"
     loader = PyPDFDirectoryLoader(pdf_folder_path)
     docs = loader.load()
