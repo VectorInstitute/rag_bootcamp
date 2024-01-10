@@ -5,15 +5,14 @@
 import os
 from pathlib import Path
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.document_loaders.pdf import PyPDFDirectoryLoader
-from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders.pdf import PyPDFDirectoryLoader
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import EmbeddingsFilter
 from langchain.schema import HumanMessage
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 
 
 def pretty_print_docs(docs):
@@ -60,7 +59,7 @@ def main():
     #print(f"Contents of first text chunk: {texts[0]}")
 
     print(f"*** Setting up the embeddings model...")
-    embeddings = OpenAIEmbeddings(model="text-search-ada-doc-001")
+    embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
     # Set up the base vector store retriever
     print(f"*** Setting up the base vector store retriever")
