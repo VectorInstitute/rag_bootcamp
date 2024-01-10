@@ -10,12 +10,12 @@ from pathlib import Path
 import requests
 
 from langchain.chains import RetrievalQA
-from langchain.embeddings import HuggingFaceBgeEmbeddings
-from langchain.llms import Cohere
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CohereRerank
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from langchain_community.llms import Cohere
+from langchain_community.vectorstores import FAISS
 
 
 def pretty_print_docs(docs):

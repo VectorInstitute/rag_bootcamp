@@ -4,18 +4,14 @@ from getpass import getpass
 import os
 from pathlib import Path
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import TextLoader
-from langchain.vectorstores import FAISS
 from langchain.document_loaders.pdf import PyPDFDirectoryLoader
-from langchain.llms import Cohere
-from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatCohere
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CohereRerank
-from langchain.schema import HumanMessage, SystemMessage
-
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from langchain_community.llms import Cohere
+from langchain_community.vectorstores import FAISS
 
 def pretty_print_docs(docs):
     print(
@@ -31,9 +27,14 @@ def main():
     os.environ["COHERE_API_KEY"] = open(Path.home() / ".cohere.key", "r").read().strip()
 
     # Look for the source-materials folder and make sure there is at least 1 pdf file here
-    if not os.path.exists("source-materials"):
-        print(f"
-        os.mkdir("source-materials")
+    contains_pdf = False
+    directory_path = "./source-materials"
+    if not os.path.exists(directory_path):
+        print(f"ERROR: The {directory_path} subfolder must exist under this notebook")
+    for filename in os.listdir(directory_path):
+        contains_pdf = True if ".pdf" in filename else contains_pdf
+    if not contains_pdf:
+        print(f"ERROR: The {directory_path} subfolder must contain at least one .pdf file")
 
     # Start with making a generation request without RAG augmentation
     query = "What is Vector Institute doing to address AI safety and trustworthiness?"
