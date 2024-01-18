@@ -1,7 +1,8 @@
 import os
 import re
 import numpy as np
-import chromadb
+# import chromadb
+import weaviate
 
 from tqdm import tqdm
 from llama_index import (
@@ -10,7 +11,7 @@ from llama_index import (
 )
 from llama_index.embeddings import HuggingFaceEmbedding, OpenAIEmbedding
 from llama_index.llms import HuggingFaceLLM, OpenAI
-from llama_index.vector_stores import ChromaVectorStore
+from llama_index.vector_stores import ChromaVectorStore, WeaviateVectorStore
 from llama_index.storage.storage_context import StorageContext
 from llama_index.retrievers import VectorIndexRetriever
 from llama_index.query_engine import RetrieverQueryEngine
@@ -125,12 +126,20 @@ class RAGIndex():
         self.db_name = db_name
         self._persist_dir = './.index_store/'
 
-    def create_index(self, docs, save=True):
+    def create_index(self, docs, save=True, **kwargs):
         # Only supports ChromaDB as of now
         if self.db_type == 'chromadb':
             chroma_client = chromadb.Client()
             chroma_collection = chroma_client.create_collection(name=self.db_name)
             vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+        elif self.db_type == 'weaviate':
+            # weaviate_client = weaviate.Client("http://localhost:8080") # local instance
+            with open(".weaviate_api_key", "r") as f:
+                weaviate_api_key = f.read().rstrip("\n")
+            weaviate_client = weaviate.Client(
+                url=kwargs["weaviate_url"], 
+                auth_client_secret=weaviate.AuthApiKey(api_key=weaviate_api_key))
+            vector_store = WeaviateVectorStore(weaviate_client=weaviate_client, index_name=self.db_name)
         else:
             raise NotImplementedError(f'Incorrect vector db type - {self.db_type}')
         
@@ -157,8 +166,12 @@ class RAGQueryEngine():
         self.node_postprocessors = None
         self.response_synthesizer = None
 
-    def create(self, similarity_top_k, response_mode):
-        self.set_retriever(similarity_top_k)
+    def create(self, similarity_top_k, response_mode, **kwargs):
+        self.set_retriever(
+            similarity_top_k, 
+            query_mode=kwargs["query_mode"], 
+            hybrid_search_alpha=kwargs["hybrid_search_alpha"]
+            )
         self.set_response_synthesizer(response_mode)
         query_engine = RetrieverQueryEngine(
             retriever=self.retriever,
@@ -167,7 +180,7 @@ class RAGQueryEngine():
             )
         return query_engine
     
-    def set_retriever(self, similarity_top_k):
+    def set_retriever(self, similarity_top_k, query_mode="default", hybrid_search_alpha=None):
         # Other retrievers can be used based on the type of index: List, Tree, Knowledge Graph, etc.
         # https://docs.llamaindex.ai/en/stable/api_reference/query/retrievers.html
         # Find LlamaIndex equivalents for the following:
@@ -180,6 +193,8 @@ class RAGQueryEngine():
             self.retriever = VectorIndexRetriever(
                 index=self.index,
                 similarity_top_k=similarity_top_k,
+                vector_store_query_mode=query_mode,
+                alpha=hybrid_search_alpha,
                 )
         else:
             raise NotImplementedError(f'Incorrect retriever type - {self.retriever_type}')

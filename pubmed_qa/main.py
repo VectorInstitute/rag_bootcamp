@@ -32,12 +32,15 @@ def main():
         "do_sample": False,
 
         # Vector DB config
-        "vector_db_type": "chromadb",
-        "vector_db_name": "pubmed_qa",
+        "vector_db_type": "weaviate", # "chromadb", "weaviate"
+        "weaviate_url": "https://vector-rag-lab-0nbgswzi.weaviate.network",
+        "vector_db_name": "Pubmed_QA",
 
         # Retriever and query config
         "retriever_type": "vector_index",
         "retriever_similarity_top_k": 3,
+        "query_mode": "hybrid", # "default", "hybrid"
+        "hybrid_search_alpha": 0.0, # float from 0.0 (sparse search - bm25) to 1.0 (vector search)
         "response_mode": "compact",
     }
 
@@ -45,7 +48,13 @@ def main():
     # # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
     # set_global_handler("simple")
 
-
+    ### STAGE 0 - Preliminary config checks
+    print(rag_cfg)
+    if rag_cfg["query_mode"] == "hybrid":
+        assert rag_cfg["hybrid_search_alpha"] is not None, "hybrid_search_alpha cannot be None if query_mode is set to 'hybrid'"
+    if rag_cfg["vector_db_type"] == "weaviate":
+        assert rag_cfg["weaviate_url"] is not None, "weaviate_url cannot be None for weaviate vector db"
+    
     ### STAGE 1 - Load data and documents
     # 1. Load QA data
     print('Loading PubMed QA data ...')
@@ -84,14 +93,16 @@ def main():
 
 
     ### STAGE 3 - Create/load index using the appropriate vector store
-    index = RAGIndex(db_type=rag_cfg['vector_db_type'], db_name=rag_cfg['vector_db_name']).create_index(docs)
+    index = RAGIndex(db_type=rag_cfg['vector_db_type'], db_name=rag_cfg['vector_db_name'])\
+        .create_index(docs, weaviate_url=rag_cfg["weaviate_url"])
 
 
     ### STAGE 4 - Build query engine
     # Now build a query engine using retriever, response_synthesizer and node_postprocessor (add this later)
     query_engine = RAGQueryEngine(
         retriever_type=rag_cfg['retriever_type'], vector_index=index, llm_model_name=rag_cfg['llm_name']).create(
-            similarity_top_k=rag_cfg['retriever_similarity_top_k'], response_mode=rag_cfg['response_mode'])
+            similarity_top_k=rag_cfg['retriever_similarity_top_k'], response_mode=rag_cfg['response_mode'], 
+            query_mode=rag_cfg["query_mode"], hybrid_search_alpha=rag_cfg["hybrid_search_alpha"])
 
 
     # # Finally query the model!
@@ -114,7 +125,13 @@ def main():
     # #     print(node.score)
     # #     print('\n')
 
-    print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}') # 500 samples, Overall Acc: 0.626
+
+    print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}') 
+    # Chroma DB: 500 samples - Overall Acc: 0.626
+    # Weaviate DB: 500 samples -
+    # alpha 0.5 - 0.596
+    # alpha 1.0 - 0.61
+    # alpha 0.0 - 0.562
 
 
 if __name__ == "__main__":
