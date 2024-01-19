@@ -9,6 +9,7 @@ data/
 
 # keys
 .openai_key
+.weaviate_api_key
 
 # cache
 __pycache__/
