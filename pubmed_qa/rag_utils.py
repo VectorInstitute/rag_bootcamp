@@ -275,10 +275,16 @@ def evaluate(data, engine):
         ans = extract_yes_no(resp.response).lower()
         gt_ans.append(elm['answer'][0])
         pred_ans.append(ans)
+        
         # Standalone retriever accuracy
-        ret_nodes = engine.retriever.retrieve(query_str)
-        retriever_hit.append(retriever_acc(
-            elm['id'], [node.metadata["file_name"].split(".")[0] for node in ret_nodes]))
+        try:
+            ret_nodes = engine.retriever.retrieve(query_str)
+            retriever_hit.append(retriever_acc(
+                elm['id'], [node.metadata["file_name"].split(".")[0] for node in ret_nodes]))
+        except Exception as e:
+            print(f"Exception for {elm['id']}: {e}")
+            retriever_hit.append(0)
+
     acc = [(gt_ans[idx]==pred_ans[idx]) for idx in range(len(gt_ans))]
     return {"acc": np.mean(acc), "retriever_acc": np.mean(retriever_hit)}
 
