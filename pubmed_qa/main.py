@@ -1,4 +1,5 @@
 import random
+from pprint import pprint
 
 from llama_index import ServiceContext, set_global_service_context, set_global_handler
 from llama_index.text_splitter import SentenceSplitter
@@ -6,7 +7,7 @@ from llama_index.text_splitter import SentenceSplitter
 from task_dataset import PubMedQATaskDataset
 from rag_utils import (
     DocumentReader, RAGEmbedding, RAGLLM, RAGIndex, RAGQueryEngine, 
-    extract_yes_no, evaluate
+    extract_yes_no, evaluate, validate_rag_cfg
     )
 
 
@@ -33,14 +34,14 @@ def main():
 
         # Vector DB config
         "vector_db_type": "weaviate", # "chromadb", "weaviate"
-        "weaviate_url": "https://vector-rag-lab-0nbgswzi.weaviate.network",
+        "weaviate_url": "https://vector-rag-lab-xsxuylwh.weaviate.network",
         "vector_db_name": "Pubmed_QA",
 
         # Retriever and query config
         "retriever_type": "vector_index",
         "retriever_similarity_top_k": 3,
         "query_mode": "hybrid", # "default", "hybrid"
-        "hybrid_search_alpha": 0.0, # float from 0.0 (sparse search - bm25) to 1.0 (vector search)
+        "hybrid_search_alpha": 1.0, # float from 0.0 (sparse search - bm25) to 1.0 (vector search)
         "response_mode": "compact",
     }
 
@@ -50,17 +51,15 @@ def main():
 
     ### STAGE 0 - Preliminary config checks
     print(rag_cfg)
-    if rag_cfg["query_mode"] == "hybrid":
-        assert rag_cfg["hybrid_search_alpha"] is not None, "hybrid_search_alpha cannot be None if query_mode is set to 'hybrid'"
-    if rag_cfg["vector_db_type"] == "weaviate":
-        assert rag_cfg["weaviate_url"] is not None, "weaviate_url cannot be None for weaviate vector db"
-    
+    validate_rag_cfg(rag_cfg)
+
+
     ### STAGE 1 - Load data and documents
     # 1. Load QA data
     print('Loading PubMed QA data ...')
     pubmed_data = PubMedQATaskDataset('bigbio/pubmed_qa')
     print(len(pubmed_data))
-    # pubmed_data.mock_knowledge_base(output_dir='./data')
+    # pubmed_data.mock_knowledge_base(output_dir='./data', one_file_per_sample=True)
 
     # 2. Load documents
     print('Loading documents ...')
@@ -95,7 +94,7 @@ def main():
     ### STAGE 3 - Create/load index using the appropriate vector store
     index = RAGIndex(db_type=rag_cfg['vector_db_type'], db_name=rag_cfg['vector_db_name'])\
         .create_index(docs, weaviate_url=rag_cfg["weaviate_url"])
-
+    
 
     ### STAGE 4 - Build query engine
     # Now build a query engine using retriever, response_synthesizer and node_postprocessor (add this later)
@@ -112,26 +111,36 @@ def main():
     # # print(sample_elm)
 
     # query = sample_elm['question']
-    # response = query_engine.query(query)
-    # print(f'QUERY: {query}')
-    # print(f'RESPONSE: {response}')
-    # print(f'YES/NO: {extract_yes_no(response.response)}')
-    # print(f'GT ANSWER: {sample_elm["answer"]}')
-    # print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
+    # # response = query_engine.query(query)
+    # # print(f'QUERY: {query}')
+    # # print(f'RESPONSE: {response}')
+    # # print(f'YES/NO: {extract_yes_no(response.response)}')
+    # # print(f'GT ANSWER: {sample_elm["answer"]}')
+    # # print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
 
-    # # retrieved_nodes = retriever.retrieve(query)
-    # # for node in retrieved_nodes:
-    # #     print(node.text)
-    # #     print(node.score)
-    # #     print('\n')
+    # retrieved_nodes = query_engine.retriever.retrieve(query)
+    # print(f"GT doc ID: {sample_elm['id']}")
+    # print(query)
+    # for node in retrieved_nodes:
+    #     print(node.metadata["file_name"].split(".")[0])
+    #     print(node.text)
+    #     print(node.score)
+    #     print('\n')
 
+    result_dict = evaluate(pubmed_data, query_engine)
+    output_dict = {
+        "num_samples": len(pubmed_data),
+        "config": rag_cfg,
+        "result": result_dict,
+    }
+    pprint(output_dict)
 
-    print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}') 
-    # Chroma DB: 500 samples - Overall Acc: 0.626
-    # Weaviate DB: 500 samples -
-    # alpha 0.5 - 0.596
-    # alpha 1.0 - 0.61
-    # alpha 0.0 - 0.562
+    # print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}') 
+    # # Chroma DB: 500 samples - Overall Acc: 0.626
+    # # Weaviate DB: 500 samples -
+    # # alpha 0.5 - 0.596
+    # # alpha 1.0 - 0.61
+    # # alpha 0.0 - 0.562
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import weaviate
 from tqdm import tqdm
 from llama_index import (
     SimpleDirectoryReader, VectorStoreIndex, PromptTemplate, 
-    load_index_from_storage, get_response_synthesizer
+    load_index_from_storage, get_response_synthesizer, download_loader,
 )
 from llama_index.embeddings import HuggingFaceEmbedding, OpenAIEmbedding
 from llama_index.llms import HuggingFaceLLM, OpenAI
@@ -34,6 +34,12 @@ class DocumentReader():
         if self._file_ext == '.txt':
             reader = SimpleDirectoryReader(input_dir=self.input_dir)
             docs = reader.load_data()
+        elif self._file_ext == '.jsonl':
+            JSONReader = download_loader("JSONReader")
+            reader = JSONReader()
+            docs = []
+            for file in os.listdir(self.input_dir):
+                docs.extend(reader.load_data(os.path.join(self.input_dir, file), is_jsonl=True))
         else:
             raise NotImplementedError(f'Does not support {self._file_ext} file extension for document files.')
         
@@ -124,10 +130,10 @@ class RAGIndex():
     def __init__(self, db_type, db_name):
         self.db_type = db_type
         self.db_name = db_name
-        self._persist_dir = './.index_store/'
+        self._persist_dir = f'./.{db_type}_index_store/'
 
     def create_index(self, docs, save=True, **kwargs):
-        # Only supports ChromaDB as of now
+        # Only supports ChromaDB and Weaviate as of now
         if self.db_type == 'chromadb':
             chroma_client = chromadb.Client()
             chroma_collection = chroma_client.create_collection(name=self.db_name)
@@ -142,13 +148,20 @@ class RAGIndex():
             vector_store = WeaviateVectorStore(weaviate_client=weaviate_client, index_name=self.db_name)
         else:
             raise NotImplementedError(f'Incorrect vector db type - {self.db_type}')
-        
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        index = VectorStoreIndex.from_documents(docs, storage_context=storage_context)
-        if save:
-            os.makedirs(self._persist_dir, exist_ok=True)
-            index.storage_context.persist(persist_dir=self._persist_dir)
-            # TODO - Figure out reload
+
+        if os.path.isdir(self._persist_dir):
+            # Load if index already saved
+            print(f"Loading index from {self._persist_dir} ...")
+            storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=self._persist_dir)
+            index = load_index_from_storage(storage_context)
+        else:
+            # Re-index
+            print(f"Creating new index ...")
+            storage_context = StorageContext.from_defaults(vector_store=vector_store)
+            index = VectorStoreIndex.from_documents(docs, storage_context=storage_context)
+            if save:
+                os.makedirs(self._persist_dir, exist_ok=True)
+                index.storage_context.persist(persist_dir=self._persist_dir)
 
         return index
 
@@ -247,13 +260,30 @@ def extract_yes_no(resp):
     clean_txt = re.sub('[^\w]', '', match_txt)
     return clean_txt
 
+def retriever_acc(actual, retrieved_candidates):
+    # TODO - Implement other metrics like recall@k
+    # candidates are unordered as of now
+    return (actual in retrieved_candidates)
+
 def evaluate(data, engine):
     gt_ans = []
     pred_ans = []
-    for elm in tqdm(data):
-        resp = engine.query(elm['question'])
+    retriever_hit = []
+    for elm in tqdm(data, desc="Running evaluation"):
+        query_str = elm['question']
+        resp = engine.query(query_str)
         ans = extract_yes_no(resp.response).lower()
         gt_ans.append(elm['answer'][0])
         pred_ans.append(ans)
+        # Standalone retriever accuracy
+        ret_nodes = engine.retriever.retrieve(query_str)
+        retriever_hit.append(retriever_acc(
+            elm['id'], [node.metadata["file_name"].split(".")[0] for node in ret_nodes]))
     acc = [(gt_ans[idx]==pred_ans[idx]) for idx in range(len(gt_ans))]
-    return np.mean(acc)
+    return {"acc": np.mean(acc), "retriever_acc": np.mean(retriever_hit)}
+
+def validate_rag_cfg(cfg):
+    if cfg["query_mode"] == "hybrid":
+        assert cfg["hybrid_search_alpha"] is not None, "hybrid_search_alpha cannot be None if query_mode is set to 'hybrid'"
+    if cfg["vector_db_type"] == "weaviate":
+        assert cfg["weaviate_url"] is not None, "weaviate_url cannot be None for weaviate vector db"
