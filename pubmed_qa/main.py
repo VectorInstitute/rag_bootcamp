@@ -16,7 +16,7 @@ def main():
     # Set RAG configuration
     rag_cfg = {
         # Node parser config
-        "chunk_size": 64,
+        "chunk_size": 256,
         "chunk_overlap": 0,
 
         # Embedding model config
@@ -39,10 +39,10 @@ def main():
         "weaviate_url": "https://vector-rag-lab-xsxuylwh.weaviate.network",
 
         # Retriever and query config
-        "retriever_type": "vector_index",
+        "retriever_type": "bm25", # "vector_index", "bm25"
         "retriever_similarity_top_k": 3,
         "query_mode": "hybrid", # "default", "hybrid"
-        "hybrid_search_alpha": 1.0, # float from 0.0 (sparse search - bm25) to 1.0 (vector search)
+        "hybrid_search_alpha": 0.5, # float from 0.0 (sparse search - bm25) to 1.0 (vector search)
         "response_mode": "compact",
     }
 
@@ -99,10 +99,21 @@ def main():
 
     ### STAGE 4 - Build query engine
     # Now build a query engine using retriever, response_synthesizer and node_postprocessor (add this later)
+    query_engine_args = {
+        "similarity_top_k": rag_cfg['retriever_similarity_top_k'], 
+        "response_mode": rag_cfg['response_mode'],
+    }
+    if (rag_cfg["retriever_type"] == "vector_index") and (rag_cfg["vector_db_type"] == "weaviate"):
+        query_engine_args.update({
+            "query_mode": rag_cfg["query_mode"], 
+            "hybrid_search_alpha": rag_cfg["hybrid_search_alpha"]
+        })
+    elif rag_cfg["retriever_type"] == "bm25":
+        nodes = service_context.node_parser.get_nodes_from_documents(docs)
+        tokenizer = service_context.embed_model._tokenizer
+        query_engine_args.update({"nodes": nodes, "tokenizer": tokenizer})
     query_engine = RAGQueryEngine(
-        retriever_type=rag_cfg['retriever_type'], vector_index=index, llm_model_name=rag_cfg['llm_name']).create(
-            similarity_top_k=rag_cfg['retriever_similarity_top_k'], response_mode=rag_cfg['response_mode'], 
-            query_mode=rag_cfg["query_mode"], hybrid_search_alpha=rag_cfg["hybrid_search_alpha"])
+        retriever_type=rag_cfg['retriever_type'], vector_index=index, llm_model_name=rag_cfg['llm_name']).create(**query_engine_args)
 
 
     # ### STAGE 5 - Finally query the model!
@@ -112,12 +123,12 @@ def main():
     # # print(sample_elm)
 
     # query = sample_elm['question']
-    # # response = query_engine.query(query)
-    # # print(f'QUERY: {query}')
-    # # print(f'RESPONSE: {response}')
-    # # print(f'YES/NO: {extract_yes_no(response.response)}')
-    # # print(f'GT ANSWER: {sample_elm["answer"]}')
-    # # print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
+    # response = query_engine.query(query)
+    # print(f'QUERY: {query}')
+    # print(f'RESPONSE: {response}')
+    # print(f'YES/NO: {extract_yes_no(response.response)}')
+    # print(f'GT ANSWER: {sample_elm["answer"]}')
+    # print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
 
     # retrieved_nodes = query_engine.retriever.retrieve(query)
     # print(f"GT doc ID: {sample_elm['id']}")
@@ -164,7 +175,9 @@ def main():
     #         'weaviate_url': 'https://vector-rag-lab-xsxuylwh.weaviate.network'},
     # 'num_samples': 500,
     # 'result': {'acc': 0.666, 'retriever_acc': 0.994}}
-    # same as above for {'chunk_overlap': 32, 'chunk_size': 128,}
+    # Chunk ablation --------------
+    # 'result': {'acc': 0.666, 'retriever_acc': 0.994}} for {'chunk_overlap': 32, 'chunk_size': 128,}
+    # 'result': {'acc': 0.666, 'retriever_acc': 0.992}} for {'chunk_overlap': 0, 'chunk_size': 64,}
 
 
 if __name__ == "__main__":

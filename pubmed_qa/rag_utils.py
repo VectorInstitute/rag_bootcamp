@@ -13,7 +13,7 @@ from llama_index.embeddings import HuggingFaceEmbedding, OpenAIEmbedding
 from llama_index.llms import HuggingFaceLLM, OpenAI
 from llama_index.vector_stores import ChromaVectorStore, WeaviateVectorStore
 from llama_index.storage.storage_context import StorageContext
-from llama_index.retrievers import VectorIndexRetriever
+from llama_index.retrievers import VectorIndexRetriever, BM25Retriever
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.postprocessor import SimilarityPostprocessor, LLMRerank, SentenceEmbeddingOptimizer
 
@@ -180,11 +180,7 @@ class RAGQueryEngine():
         self.response_synthesizer = None
 
     def create(self, similarity_top_k, response_mode, **kwargs):
-        self.set_retriever(
-            similarity_top_k, 
-            query_mode=kwargs["query_mode"], 
-            hybrid_search_alpha=kwargs["hybrid_search_alpha"]
-            )
+        self.set_retriever(similarity_top_k, **kwargs)
         self.set_response_synthesizer(response_mode)
         query_engine = RetrieverQueryEngine(
             retriever=self.retriever,
@@ -193,7 +189,7 @@ class RAGQueryEngine():
             )
         return query_engine
     
-    def set_retriever(self, similarity_top_k, query_mode="default", hybrid_search_alpha=None):
+    def set_retriever(self, similarity_top_k, **kwargs):
         # Other retrievers can be used based on the type of index: List, Tree, Knowledge Graph, etc.
         # https://docs.llamaindex.ai/en/stable/api_reference/query/retrievers.html
         # Find LlamaIndex equivalents for the following:
@@ -206,9 +202,15 @@ class RAGQueryEngine():
             self.retriever = VectorIndexRetriever(
                 index=self.index,
                 similarity_top_k=similarity_top_k,
-                vector_store_query_mode=query_mode,
-                alpha=hybrid_search_alpha,
+                vector_store_query_mode=kwargs["query_mode"],
+                alpha=kwargs["hybrid_search_alpha"],
                 )
+        elif self.retriever_type == 'bm25':
+            self.retriever = BM25Retriever(
+                nodes=kwargs["nodes"],
+                tokenizer=kwargs["tokenizer"],
+                similarity_top_k=similarity_top_k,
+            )
         else:
             raise NotImplementedError(f'Incorrect retriever type - {self.retriever_type}')
 
