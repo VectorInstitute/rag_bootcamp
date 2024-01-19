@@ -13,10 +13,10 @@ from rag_utils import (
 
 def main():
 
-    # Set RAG configuration, TODO - Create json file
+    # Set RAG configuration
     rag_cfg = {
         # Node parser config
-        "chunk_size": 256,
+        "chunk_size": 64,
         "chunk_overlap": 0,
 
         # Embedding model config
@@ -34,8 +34,9 @@ def main():
 
         # Vector DB config
         "vector_db_type": "weaviate", # "chromadb", "weaviate"
-        "weaviate_url": "https://vector-rag-lab-xsxuylwh.weaviate.network",
         "vector_db_name": "Pubmed_QA",
+        # MODIFY THIS
+        "weaviate_url": "https://vector-rag-lab-xsxuylwh.weaviate.network",
 
         # Retriever and query config
         "retriever_type": "vector_index",
@@ -50,15 +51,15 @@ def main():
     # set_global_handler("simple")
 
     ### STAGE 0 - Preliminary config checks
-    print(rag_cfg)
+    pprint(rag_cfg)
     validate_rag_cfg(rag_cfg)
 
 
-    ### STAGE 1 - Load data and documents
-    # 1. Load QA data
+    ### STAGE 1 - Load dataset and documents
+    # 1. Load PubMed QA dataset
     print('Loading PubMed QA data ...')
     pubmed_data = PubMedQATaskDataset('bigbio/pubmed_qa')
-    print(len(pubmed_data))
+    print(f"Loaded data size: {len(pubmed_data)}")
     # pubmed_data.mock_knowledge_base(output_dir='./data', one_file_per_sample=True)
 
     # 2. Load documents
@@ -68,7 +69,7 @@ def main():
     print(f'No. of documents loaded: {len(docs)}')
 
 
-    ### STAGE 2 - Load node parser, embedding and LLM and set service context
+    ### STAGE 2 - Load node parser, embedding, LLM and set service context
     # 1. Load node parser to split documents into smaller chunks
     print('Loading node parser ...')
     node_parser = SentenceSplitter(chunk_size=rag_cfg['chunk_size'], chunk_overlap=rag_cfg['chunk_overlap'])
@@ -80,7 +81,7 @@ def main():
     # 3. Load LLM for generation
     llm = RAGLLM(rag_cfg['llm_type'], rag_cfg['llm_name']).load_model(**rag_cfg) # TODO - pass args
 
-    # Use service context to set the node parser, embedding model, LLM, etc.
+    # 4. Use service context to set the node parser, embedding model, LLM, etc.
     # TODO - Add pompt_helper (if required)
     service_context = ServiceContext.from_defaults(
         node_parser=node_parser,
@@ -91,7 +92,7 @@ def main():
     set_global_service_context(service_context)
 
 
-    ### STAGE 3 - Create/load index using the appropriate vector store
+    ### STAGE 3 - Create index using the appropriate vector store
     index = RAGIndex(db_type=rag_cfg['vector_db_type'], db_name=rag_cfg['vector_db_name'])\
         .create_index(docs, weaviate_url=rag_cfg["weaviate_url"])
     
@@ -104,7 +105,7 @@ def main():
             query_mode=rag_cfg["query_mode"], hybrid_search_alpha=rag_cfg["hybrid_search_alpha"])
 
 
-    # # Finally query the model!
+    # ### STAGE 5 - Finally query the model!
     # random.seed(41)
     # sample_idx = random.randint(0, len(pubmed_data)-1)
     # sample_elm = pubmed_data[sample_idx]
@@ -142,10 +143,30 @@ def main():
     # # alpha 1.0 - 0.61
     # # alpha 0.0 - 0.562
 
+    # {'config': {'chunk_overlap': 0,
+    #         'chunk_size': 256,
+    #         'do_sample': False,
+    #         'embed_model_name': 'BAAI/bge-base-en-v1.5',
+    #         'embed_model_type': 'hf',
+    #         'hybrid_search_alpha': 1.0,
+    #         'llm_name': 'Llama-2-7b-chat-hf',
+    #         'llm_type': 'local',
+    #         'max_new_tokens': 256,
+    #         'query_mode': 'hybrid',
+    #         'response_mode': 'compact',
+    #         'retriever_similarity_top_k': 3,
+    #         'retriever_type': 'vector_index',
+    #         'temperature': 1.0,
+    #         'top_k': 50,
+    #         'top_p': 1.0,
+    #         'vector_db_name': 'Pubmed_QA',
+    #         'vector_db_type': 'weaviate',
+    #         'weaviate_url': 'https://vector-rag-lab-xsxuylwh.weaviate.network'},
+    # 'num_samples': 500,
+    # 'result': {'acc': 0.666, 'retriever_acc': 0.994}}
+    # same as above for {'chunk_overlap': 32, 'chunk_size': 128,}
+
 
 if __name__ == "__main__":
-
-    # # Set OpenAI API key
-    # os.environ["OPENAI_API_KEY"] = Path("./.openai_key").read_text()
 
     main()
