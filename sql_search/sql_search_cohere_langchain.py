@@ -28,21 +28,24 @@ def main():
 
     # Setup the environment
     os.environ["COHERE_API_KEY"] = open(Path.home() / ".cohere.key", "r").read().strip()
-
+    
     # Start with making a generation request without RAG augmentation
-    #query = "How many employees are at Vector Institute?"
-    #query = "How many employees are there?"
-    query = "What are the names of all the employees?"
+
+    # BUG: Queries that ask for mathematical expressions get returned with the wrong syntax and fail
+    #query = "How many people with management jobs applied for a banking deposit in May?"
+    query = "What are all the different job types for people who applied for a banking deposit?"
     llm = Cohere()
     print(f"*** Sending non-RAG augmented generation request for query: {query}\n")
     result = llm(query)
     print(f"Result: {result}\n")
 
-    # Now query the database for the information we want
-    db = SQLDatabase.from_uri("sqlite:///vector.db")
+    # Now query the LLM to turn our question into a SQL query
+    # The banking term deposits data comes from here: https://www.kaggle.com/datasets/prakharrathi25/banking-dataset-marketing-targets
+    print(f"*** Now translating the question into a SQL query to send to our database...")
+    db = SQLDatabase.from_uri("sqlite:///banking_term_deposits.db")
     db_chain = SQLDatabaseChain.from_llm(llm, db, verbose=True)
     result = db_chain.run(query)
-    print(f"The result is: {result}")
+    print(f"Result: {result}")
 
 
 if __name__ == "__main__":
