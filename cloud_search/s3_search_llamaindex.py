@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import json
 import os
 from pathlib import Path
+import sys
 
-from llama_index import download_loader, ServiceContext, SimpleDirectoryReader, VectorStoreIndex
+from llama_index import download_loader, ServiceContext, VectorStoreIndex
 from llama_index.embeddings.cohereai import CohereEmbedding
 from llama_index.llms import Cohere
 from llama_index.postprocessor.cohere_rerank import CohereRerank
@@ -25,12 +25,14 @@ def main():
         os.environ["COHERE_API_KEY"] = open(Path.home() / ".cohere.key", "r").read().strip()
         os.environ["CO_API_KEY"] = os.environ["COHERE_API_KEY"]
     except Exception:
-        print(f"Unable to read your Cohere API key. Make sure this is stored in a text file in your home directory at ~/.cohere.key")
+        sys.exit(f"Unable to read your Cohere API key. Make sure this is stored in a text file in your home directory at ~/.cohere.key\n")
 
     # Make sure that the AWS credentials are stored in ~/.aws/credentials
-    aws_credentials_file = Path.home() / ".aws/credentials"
-    if not aws_credentials_file.exists():
-        raise Exception(f"Unable to find your AWS credentials file at {aws_credentials_file}. Make sure this file exists and contains your AWS credentials.")
+    try:
+        aws_credentials_file = Path.home() / ".aws/credentials"
+        assert aws_credentials_file.exists()
+    except:
+        sys.exit(f"Unable to find your AWS credentials file at {aws_credentials_file}. Make sure this file exists and contains your AWS credentials.\n")
 
     # Make sure the AWS credentials are stored in the correct format
     try:
@@ -39,10 +41,10 @@ def main():
         assert "aws_access_key_id" in aws_credentials
         assert "aws_secret_access_key" in aws_credentials
     except Exception:
-        print(f"""Make aure your ~/.aws/credentials file is in the following format:
+        sys.exit(f"""Unable to load AWS credentials. Make sure your ~/.aws/credentials file is in the following format:
 [default]
 aws_access_key_id = YOUR_ACCESS_KEY
-aws_secret_access_key = YOUR_SECRET_KEY""")
+aws_secret_access_key = YOUR_SECRET_KEY\n""")
 
     # Start with making a generation request without RAG augmentation
     query = "Describe the goals of the OpenNF project."
@@ -55,15 +57,8 @@ aws_secret_access_key = YOUR_SECRET_KEY""")
     S3Reader = download_loader("S3Reader")
     loader = S3Reader(bucket='vector-rag-bootcamp')
     documents = loader.load_data()
-    print(f"Documents: {documents}")
+    #print(f"Documents: {documents}")
 
-    """
-
-    print(f"*** Loading source materials from {pdf_folder_path}\n")
-    documents = SimpleDirectoryReader(pdf_folder_path).load_data()
-    print(f"Number of source materials: {len(documents)}\n")
-    print(f"Example first source material:\n {documents[0]}\n")
-    
     # Define Embeddings Model
     print(f"*** Setting up the embeddings model...")
     embed_model = CohereEmbedding(
@@ -80,7 +75,7 @@ aws_secret_access_key = YOUR_SECRET_KEY""")
     index = VectorStoreIndex.from_documents(documents, service_context=service_context, show_progress=True)
     search_query_retriever = index.as_retriever(service_context=service_context)
  
-    # Retrieve the most relevant context from the vector store based on the query(No Reranking Applied)
+    # Retrieve the most relevant context from the vector store based on the query (No Reranking Applied)
     search_query_retriever = index.as_retriever(service_context=service_context)
     search_query_retrieved_nodes = search_query_retriever.retrieve(query)
     print(f"Search query retriever found {len(search_query_retrieved_nodes)} results")
@@ -96,9 +91,7 @@ aws_secret_access_key = YOUR_SECRET_KEY""")
     # Now ask the original query again, this time augmented with reranked results
     result = query_engine.query(query)
     print(f"Result: {result}\n")
-    """
 
 
 if __name__ == "__main__":
     main()
-
