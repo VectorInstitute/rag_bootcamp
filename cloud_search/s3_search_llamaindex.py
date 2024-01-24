@@ -27,15 +27,25 @@ def main():
     except Exception:
         print(f"Unable to read your Cohere API key. Make sure this is stored in a text file in your home directory at ~/.cohere.key")
 
+    # Make sure that the AWS credentials are stored in ~/.aws/credentials
+    aws_credentials_file = Path.home() / ".aws/credentials"
+    if not aws_credentials_file.exists():
+        raise Exception(f"Unable to find your AWS credentials file at {aws_credentials_file}. Make sure this file exists and contains your AWS credentials.")
+
+    # Make sure the AWS credentials are stored in the correct format
     try:
-        aws_keys = json.load(open(Path.home() / ".aws.key", "r"))
-        aws_access_key = aws_keys["access-key"]
-        aws_secret_key = aws_keys["secret-key"]
+        aws_credentials = open(aws_credentials_file, "r").read().strip()
+        assert aws_credentials.startswith("[default]")
+        assert "aws_access_key_id" in aws_credentials
+        assert "aws_secret_access_key" in aws_credentials
     except Exception:
-        print(f"Unable to read your AWS key. Make sure this is stored in a json file in your home directory at ~/.aws.key with both 'access-key' and 'secret-key' fields")
+        print(f"""Make aure your ~/.aws/credentials file is in the following format:
+[default]
+aws_access_key_id = YOUR_ACCESS_KEY
+aws_secret_access_key = YOUR_SECRET_KEY""")
 
     # Start with making a generation request without RAG augmentation
-    query = "Describe the goals of the OpenNF research project."
+    query = "Describe the goals of the OpenNF project."
     llm = Cohere(api_key=os.environ["COHERE_API_KEY"])
     print(f"*** Sending non-RAG augmented generation request for query: {query}\n")
     result = llm.complete(query)
@@ -43,7 +53,7 @@ def main():
 
     # Load the pdfs from S3
     S3Reader = download_loader("S3Reader")
-    loader = S3Reader(bucket='vector-rag-bootcamp', key='opennf.txt', aws_access_id=aws_access_key, aws_access_secret=aws_secret_key) #, s3_endpoint_url='https://vector-rag-bootcamp.s3-us-west-2.amazonaws.com/')
+    loader = S3Reader(bucket='vector-rag-bootcamp')
     documents = loader.load_data()
     print(f"Documents: {documents}")
 
