@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
 
-from getpass import getpass
 import os
 from pathlib import Path
 
-from langchain.document_loaders.pdf import PyPDFDirectoryLoader
-from langchain.chains import create_sql_query_chain
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import CohereRerank
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_community.llms import Cohere
 from langchain_community.utilities import SQLDatabase
-from langchain_community.vectorstores import FAISS
 from langchain_experimental.sql import SQLDatabaseChain
 
 
