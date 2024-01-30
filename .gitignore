@@ -3,6 +3,9 @@ env/
 venv/
 rag_venv/
 
+# notebook folders
+.ipynb_checkpoints/
+
 # data folders
 data/
 */source-materials/
