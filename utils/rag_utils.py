@@ -1,8 +1,6 @@
 import os
 import re
 import numpy as np
-# import chromadb
-import weaviate
 
 from tqdm import tqdm
 from llama_index import (
@@ -11,8 +9,6 @@ from llama_index import (
 )
 from llama_index.embeddings import HuggingFaceEmbedding, OpenAIEmbedding
 from llama_index.llms import HuggingFaceLLM, OpenAI
-from llama_index.vector_stores import ChromaVectorStore, WeaviateVectorStore
-from llama_index.storage.storage_context import StorageContext
 from llama_index.retrievers import VectorIndexRetriever, BM25Retriever
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.postprocessor import SimilarityPostprocessor, LLMRerank, SentenceEmbeddingOptimizer
@@ -86,84 +82,6 @@ class RAGEmbedding():
         # print(len(sample_text_embedding))
         
         return embed_model
-
-
-class RAGLLM():
-    '''
-    Llama-index supports OpenAI, Cohere, AI21 and HuggingFace LLMs
-    https://docs.llamaindex.ai/en/stable/module_guides/models/llms/usage_custom.html
-    '''
-    def __init__(self, llm_type, llm_name):
-        self.llm_type = llm_type
-        self.llm_name = llm_name
-
-    def load_model(self, **kwargs):
-        print(f'Loading {self.llm_type} LLM model ...')
-        gen_arg_keys = ['temperature', 'top_p', 'top_k', 'do_sample']
-        gen_kwargs = {k: v for k, v in kwargs.items() if k in gen_arg_keys}
-        if self.llm_type == 'local':
-            # Using local HuggingFace LLM stored at /model-weights
-            llm = HuggingFaceLLM(
-                tokenizer_name=f"/model-weights/{self.llm_name}",
-                model_name=f"/model-weights/{self.llm_name}",
-                device_map="auto",
-                context_window=4096,
-                max_new_tokens=kwargs['max_new_tokens'],
-                generate_kwargs=gen_kwargs,
-                # model_kwargs={"torch_dtype": torch.float16, "load_in_8bit": True},
-            )
-        elif self.llm_type == 'openai':
-            # TODO - Add open ai llm
-            # llm = OpenAI()
-            raise NotImplementedError
-
-        return llm
-
-
-class RAGIndex():
-    '''
-    Use storage context to set custom vector store
-    Available options: https://docs.llamaindex.ai/en/stable/module_guides/storing/vector_stores.html
-    Use Chroma: https://docs.llamaindex.ai/en/stable/examples/vector_stores/ChromaIndexDemo.html
-    LangChain vector stores: https://python.langchain.com/docs/modules/data_connection/vectorstores/
-    '''
-    def __init__(self, db_type, db_name):
-        self.db_type = db_type
-        self.db_name = db_name
-        self._persist_dir = f'./.{db_type}_index_store/'
-
-    def create_index(self, docs, save=True, **kwargs):
-        # Only supports ChromaDB and Weaviate as of now
-        if self.db_type == 'chromadb':
-            chroma_client = chromadb.Client()
-            chroma_collection = chroma_client.create_collection(name=self.db_name)
-            vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-        elif self.db_type == 'weaviate':
-            # weaviate_client = weaviate.Client("http://localhost:8080") # local instance
-            with open(".weaviate_api_key", "r") as f:
-                weaviate_api_key = f.read().rstrip("\n")
-            weaviate_client = weaviate.Client(
-                url=kwargs["weaviate_url"], 
-                auth_client_secret=weaviate.AuthApiKey(api_key=weaviate_api_key))
-            vector_store = WeaviateVectorStore(weaviate_client=weaviate_client, index_name=self.db_name)
-        else:
-            raise NotImplementedError(f'Incorrect vector db type - {self.db_type}')
-
-        if os.path.isdir(self._persist_dir):
-            # Load if index already saved
-            print(f"Loading index from {self._persist_dir} ...")
-            storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=self._persist_dir)
-            index = load_index_from_storage(storage_context)
-        else:
-            # Re-index
-            print(f"Creating new index ...")
-            storage_context = StorageContext.from_defaults(vector_store=vector_store)
-            index = VectorStoreIndex.from_documents(docs, storage_context=storage_context)
-            if save:
-                os.makedirs(self._persist_dir, exist_ok=True)
-                index.storage_context.persist(persist_dir=self._persist_dir)
-
-        return index
 
 
 class RAGQueryEngine():
@@ -289,9 +207,3 @@ def evaluate(data, engine):
 
     acc = [(gt_ans[idx]==pred_ans[idx]) for idx in range(len(gt_ans))]
     return {"acc": np.mean(acc), "retriever_acc": np.mean(retriever_hit)}
-
-def validate_rag_cfg(cfg):
-    if cfg["query_mode"] == "hybrid":
-        assert cfg["hybrid_search_alpha"] is not None, "hybrid_search_alpha cannot be None if query_mode is set to 'hybrid'"
-    if cfg["vector_db_type"] == "weaviate":
-        assert cfg["weaviate_url"] is not None, "weaviate_url cannot be None for weaviate vector db"

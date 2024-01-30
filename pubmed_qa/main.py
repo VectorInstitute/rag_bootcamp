@@ -1,4 +1,3 @@
-import random
 from pprint import pprint
 import sys
 
@@ -8,10 +7,13 @@ from llama_index.text_splitter import SentenceSplitter
 from task_dataset import PubMedQATaskDataset
 
 sys.path.append("..")
+from utils.hosting_utils import RAGLLM
 from utils.rag_utils import (
-    DocumentReader, RAGEmbedding, RAGLLM, RAGIndex, RAGQueryEngine, 
-    extract_yes_no, evaluate, validate_rag_cfg
+    DocumentReader, RAGEmbedding, RAGQueryEngine, extract_yes_no, evaluate
     )
+from utils.storage_utils import (
+    RAGIndex, validate_rag_cfg
+)
 
 
 def main():
