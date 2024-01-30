@@ -207,3 +207,9 @@ def evaluate(data, engine):
 
     acc = [(gt_ans[idx]==pred_ans[idx]) for idx in range(len(gt_ans))]
     return {"acc": np.mean(acc), "retriever_acc": np.mean(retriever_hit)}
+
+def validate_rag_cfg(cfg):
+    if cfg["query_mode"] == "hybrid":
+        assert cfg["hybrid_search_alpha"] is not None, "hybrid_search_alpha cannot be None if query_mode is set to 'hybrid'"
+    if cfg["vector_db_type"] == "weaviate":
+        assert cfg["weaviate_url"] is not None, "weaviate_url cannot be None for weaviate vector db"

@@ -52,9 +52,3 @@ class RAGIndex():
                 index.storage_context.persist(persist_dir=self._persist_dir)
 
         return index
-
-def validate_rag_cfg(cfg):
-    if cfg["query_mode"] == "hybrid":
-        assert cfg["hybrid_search_alpha"] is not None, "hybrid_search_alpha cannot be None if query_mode is set to 'hybrid'"
-    if cfg["vector_db_type"] == "weaviate":
-        assert cfg["weaviate_url"] is not None, "weaviate_url cannot be None for weaviate vector db"
