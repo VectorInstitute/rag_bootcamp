@@ -1,11 +1,14 @@
 import random
 from pprint import pprint
+import sys
 
 from llama_index import ServiceContext, set_global_service_context, set_global_handler
 from llama_index.text_splitter import SentenceSplitter
 
 from task_dataset import PubMedQATaskDataset
-from rag_utils import (
+
+sys.path.append("..")
+from utils.rag_utils import (
     DocumentReader, RAGEmbedding, RAGLLM, RAGIndex, RAGQueryEngine, 
     extract_yes_no, evaluate, validate_rag_cfg
     )
