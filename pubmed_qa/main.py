@@ -1,4 +1,6 @@
+from pathlib import Path
 from pprint import pprint
+import subprocess
 import sys
 
 from llama_index import ServiceContext, set_global_service_context, set_global_handler
@@ -9,11 +11,9 @@ from task_dataset import PubMedQATaskDataset
 sys.path.append("..")
 from utils.hosting_utils import RAGLLM
 from utils.rag_utils import (
-    DocumentReader, RAGEmbedding, RAGQueryEngine, extract_yes_no, evaluate
+    DocumentReader, RAGEmbedding, RAGQueryEngine, extract_yes_no, evaluate, validate_rag_cfg
     )
-from utils.storage_utils import (
-    RAGIndex, validate_rag_cfg
-)
+from utils.storage_utils import RAGIndex
 
 
 def main():
@@ -41,7 +41,7 @@ def main():
         "vector_db_type": "weaviate", # "chromadb", "weaviate"
         "vector_db_name": "Pubmed_QA",
         # MODIFY THIS
-        "weaviate_url": "https://vector-rag-lab-xsxuylwh.weaviate.network",
+        "weaviate_url": "https://vector-rag-bootcamp-jmt9kugd.weaviate.network",
 
         # Retriever and query config
         "retriever_type": "bm25", # "vector_index", "bm25"
@@ -55,6 +55,13 @@ def main():
     # # https://docs.llamaindex.ai/en/stable/module_guides/observability/observability.html
     # set_global_handler("simple")
 
+    # Setup the environment
+    try:
+        f = open(Path.home() / ".weaviate_api_key", "r")
+        f.close()
+    except Exception as err:
+        print(f"Could not read your Weaviate key. Please make sure this is available in plain text under your home directory in ~/.weaviate_api_key: {err}")
+
     ### STAGE 0 - Preliminary config checks
     pprint(rag_cfg)
     validate_rag_cfg(rag_cfg)
@@ -65,7 +72,7 @@ def main():
     print('Loading PubMed QA data ...')
     pubmed_data = PubMedQATaskDataset('bigbio/pubmed_qa')
     print(f"Loaded data size: {len(pubmed_data)}")
-    # pubmed_data.mock_knowledge_base(output_dir='./data', one_file_per_sample=True)
+    pubmed_data.mock_knowledge_base(output_dir='./data', one_file_per_sample=True)
 
     # 2. Load documents
     print('Loading documents ...')

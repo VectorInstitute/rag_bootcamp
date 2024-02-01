@@ -1,11 +1,21 @@
-# import chromadb
 from llama_index import (
     VectorStoreIndex, load_index_from_storage, get_response_synthesizer, download_loader,
 )
 from llama_index.storage.storage_context import StorageContext
 from llama_index.vector_stores import ChromaVectorStore, WeaviateVectorStore
 import os
-import weaviate
+from pathlib import Path
+
+try:
+    import chromadb
+except Exception:
+    print(f"The chromadb package is not available on this system, skipping")
+
+try:
+    import weaviate
+except Exception:
+    print(f"The weaviate package is not available on this system, skipping")
+
 
 
 class RAGIndex():
@@ -28,7 +38,7 @@ class RAGIndex():
             vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
         elif self.db_type == 'weaviate':
             # weaviate_client = weaviate.Client("http://localhost:8080") # local instance
-            with open(".weaviate_api_key", "r") as f:
+            with open(Path.home() / ".weaviate_api_key", "r") as f:
                 weaviate_api_key = f.read().rstrip("\n")
             weaviate_client = weaviate.Client(
                 url=kwargs["weaviate_url"], 
