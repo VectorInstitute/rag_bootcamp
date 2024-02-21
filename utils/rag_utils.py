@@ -3,15 +3,18 @@ import re
 import numpy as np
 
 from tqdm import tqdm
-from llama_index import (
+from llama_index.core import (
     SimpleDirectoryReader, VectorStoreIndex, PromptTemplate, 
     load_index_from_storage, get_response_synthesizer, download_loader,
 )
-from llama_index.embeddings import HuggingFaceEmbedding, OpenAIEmbedding
-from llama_index.llms import HuggingFaceLLM, OpenAI
-from llama_index.retrievers import VectorIndexRetriever, BM25Retriever
-from llama_index.query_engine import RetrieverQueryEngine
-from llama_index.postprocessor import SimilarityPostprocessor, LLMRerank, SentenceEmbeddingOptimizer
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.llms.huggingface import HuggingFaceLLM
+from llama_index.llms.openai import OpenAI
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.retrievers.bm25 import BM25Retriever
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.postprocessor import SimilarityPostprocessor, LLMRerank, SentenceEmbeddingOptimizer
 
 
 class DocumentReader():

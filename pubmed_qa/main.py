@@ -2,9 +2,10 @@ from pathlib import Path
 from pprint import pprint
 import subprocess
 import sys
+import random
 
-from llama_index import ServiceContext, set_global_service_context, set_global_handler
-from llama_index.text_splitter import SentenceSplitter
+from llama_index.core import ServiceContext, set_global_service_context, set_global_handler
+from llama_index.core.node_parser import SentenceSplitter
 
 from task_dataset import PubMedQATaskDataset
 
@@ -41,7 +42,7 @@ def main():
         "vector_db_type": "weaviate", # "chromadb", "weaviate"
         "vector_db_name": "Pubmed_QA",
         # MODIFY THIS
-        "weaviate_url": "https://vector-rag-bootcamp-jmt9kugd.weaviate.network",
+        "weaviate_url": "https://rag-bootcamp-pubmed-qa-lsqv7od4.weaviate.network",
 
         # Retriever and query config
         "retriever_type": "bm25", # "vector_index", "bm25"
@@ -128,19 +129,19 @@ def main():
         retriever_type=rag_cfg['retriever_type'], vector_index=index, llm_model_name=rag_cfg['llm_name']).create(**query_engine_args)
 
 
-    # ### STAGE 5 - Finally query the model!
-    # random.seed(41)
-    # sample_idx = random.randint(0, len(pubmed_data)-1)
-    # sample_elm = pubmed_data[sample_idx]
-    # # print(sample_elm)
+    ### STAGE 5 - Finally query the model!
+    random.seed(41)
+    sample_idx = random.randint(0, len(pubmed_data)-1)
+    sample_elm = pubmed_data[sample_idx]
+    # print(sample_elm)
 
-    # query = sample_elm['question']
-    # response = query_engine.query(query)
-    # print(f'QUERY: {query}')
-    # print(f'RESPONSE: {response}')
-    # print(f'YES/NO: {extract_yes_no(response.response)}')
-    # print(f'GT ANSWER: {sample_elm["answer"]}')
-    # print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
+    query = sample_elm['question']
+    response = query_engine.query(query)
+    print(f'QUERY: {query}')
+    print(f'RESPONSE: {response}')
+    print(f'YES/NO: {extract_yes_no(response.response)}')
+    print(f'GT ANSWER: {sample_elm["answer"]}')
+    print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
 
     # retrieved_nodes = query_engine.retriever.retrieve(query)
     # print(f"GT doc ID: {sample_elm['id']}")
@@ -151,13 +152,13 @@ def main():
     #     print(node.score)
     #     print('\n')
 
-    result_dict = evaluate(pubmed_data, query_engine)
-    output_dict = {
-        "num_samples": len(pubmed_data),
-        "config": rag_cfg,
-        "result": result_dict,
-    }
-    pprint(output_dict)
+#    result_dict = evaluate(pubmed_data, query_engine)
+#    output_dict = {
+#        "num_samples": len(pubmed_data),
+#        "config": rag_cfg,
+#        "result": result_dict,
+#    }
+#    pprint(output_dict)
 
     # print(f'Overall Acc: {evaluate(pubmed_data, query_engine)}') 
     # # Chroma DB: 500 samples - Overall Acc: 0.626

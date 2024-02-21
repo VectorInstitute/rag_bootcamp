@@ -1,4 +1,4 @@
-from llama_index.llms import HuggingFaceLLM
+from llama_index.llms.huggingface import HuggingFaceLLM
 
 class RAGLLM():
     '''
@@ -8,6 +8,7 @@ class RAGLLM():
     def __init__(self, llm_type, llm_name):
         self.llm_type = llm_type
         self.llm_name = llm_name
+        self.local_model_path = "/home/omkar/model-weights"
 
     def load_model(self, **kwargs):
         print(f'Loading {self.llm_type} LLM model ...')
@@ -16,8 +17,8 @@ class RAGLLM():
         if self.llm_type == 'local':
             # Using local HuggingFace LLM stored at /model-weights
             llm = HuggingFaceLLM(
-                tokenizer_name=f"/model-weights/{self.llm_name}",
-                model_name=f"/model-weights/{self.llm_name}",
+                tokenizer_name=f"{self.local_model_path}/{self.llm_name}",
+                model_name=f"{self.local_model_path}/{self.llm_name}",
                 device_map="auto",
                 context_window=4096,
                 max_new_tokens=kwargs['max_new_tokens'],
