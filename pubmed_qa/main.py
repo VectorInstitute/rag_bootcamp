@@ -17,6 +17,91 @@ from utils.rag_utils import (
 from utils.storage_utils import RAGIndex
 
 
+from langchain_community.chat_models import ChatCohere
+from langchain_community.embeddings import CohereEmbeddings
+from langchain_community.llms import HuggingFaceEndpoint
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from langchain_openai.chat_models import ChatOpenAI
+from datasets import Dataset
+from ragas.metrics import (
+        answer_relevancy,
+        faithfulness,
+        context_recall,
+        context_precision
+        )
+from pathlib import Path
+import os
+from ragas import evaluate as ragas_evaluate
+
+RAGAS_METRIC_MAP = {
+        "faithfulness": faithfulness,
+        "relevancy": answer_relevancy,
+        "recall": context_recall,
+        "precision": context_precision
+        }
+
+with open(Path.home() / ".cohere_api_key", "r") as f:
+    os.environ["COHERE_API_KEY"] = f.read().rstrip("\n")
+with open(Path.home() / ".hfhub_api_token", "r") as f:
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = f.read().rstrip("\n")
+with open(Path.home() / ".openai_api_key", "r") as f:
+    os.environ["OPENAI_API_KEY"] = f.read().rstrip("\n")
+
+class RagasEval():
+    def __init__(self, metrics):
+        self.eval_llm_type = "openai" # "cohere" # "local"
+        self.max_tokens = 5
+        self.temperature = 0
+        
+        self.openai_model = "gpt-3.5-turbo" # "gpt-4"
+
+        self.local_embed_name = "BAAI/bge-base-en-v1.5"
+        self.local_model_path = "/home/omkar/model-weights"
+        self.local_llm_name = "Llama-2-7b-chat-hf"
+
+        self._prepare_embedding()
+        self._prepare_llm()
+
+        self.metrics = [RAGAS_METRIC_MAP[elm] for elm in metrics]
+
+    def _prepare_data(self, data):
+        return Dataset.from_dict(data)
+
+    def _prepare_embedding(self):
+        if self.eval_llm_type == "cohere":
+            self.eval_embedding = CohereEmbeddings(
+                    model="embed-english-light-v3.0"
+                    )
+        elif self.eval_llm_type == "local":
+            self.eval_embedding = HuggingFaceBgeEmbeddings(
+                    model_name=self.local_embed_name,
+                    )
+        elif self.eval_llm_type == "openai":
+            self.eval_embedding = None
+    
+    def _prepare_llm(self):
+        if self.eval_llm_type == "cohere":
+            self.eval_llm = ChatCohere(
+                    model="command",
+                    )
+        elif self.eval_llm_type == "local":
+            self.eval_llm = HuggingFaceEndpoint(
+                    endpoint_url=f"{self.local_model_path}/{self.local_llm_name}",
+                    )
+        elif self.eval_llm_type == "openai":
+            self.eval_llm = ChatOpenAI(model_name=self.openai_model)
+
+    def evaluate(self, data):
+        data = self._prepare_data(data)
+        result = ragas_evaluate(
+                    data,
+                    metrics=self.metrics,
+                    embeddings=self.eval_embedding,
+                    llm=self.eval_llm,
+                )
+        return result
+
+
 def main():
 
     # Set RAG configuration
@@ -50,6 +135,8 @@ def main():
         "query_mode": "hybrid", # "default", "hybrid"
         "hybrid_search_alpha": 0.5, # float from 0.0 (sparse search - bm25) to 1.0 (vector search)
         "response_mode": "compact",
+        "use_reranker": True,
+        "rerank_top_k": 2,
     }
 
     # # Set handler for debugging
@@ -125,6 +212,8 @@ def main():
         nodes = service_context.node_parser.get_nodes_from_documents(docs)
         tokenizer = service_context.embed_model._tokenizer
         query_engine_args.update({"nodes": nodes, "tokenizer": tokenizer})
+    if rag_cfg["use_reranker"]:
+        query_engine_args.update({"use_reranker": True, "rerank_top_k": rag_cfg["rerank_top_k"]})
     query_engine = RAGQueryEngine(
         retriever_type=rag_cfg['retriever_type'], vector_index=index, llm_model_name=rag_cfg['llm_name']).create(**query_engine_args)
 
@@ -143,7 +232,7 @@ def main():
     print(f'GT ANSWER: {sample_elm["answer"]}')
     print(f'GT LONG ANSWER: {sample_elm["long_answer"]}')
 
-    # retrieved_nodes = query_engine.retriever.retrieve(query)
+    retrieved_nodes = query_engine.retriever.retrieve(query)
     # print(f"GT doc ID: {sample_elm['id']}")
     # print(query)
     # for node in retrieved_nodes:
@@ -151,6 +240,17 @@ def main():
     #     print(node.text)
     #     print(node.score)
     #     print('\n')
+    
+    ## Ragas evaluation
+    eval_data = {
+        "question": [query],
+        "answer": [response.response],
+        "contexts": [[node.text for node in retrieved_nodes]],
+        "ground_truths": [[sample_elm['long_answer']]],
+        }
+    eval_obj = RagasEval(metrics=["faithfulness", "relevancy", "recall", "precision"])
+    eval_result = eval_obj.evaluate(eval_data)
+    print(eval_result)
 
 #    result_dict = evaluate(pubmed_data, query_engine)
 #    output_dict = {

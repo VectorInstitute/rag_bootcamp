@@ -15,6 +15,7 @@ from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SimilarityPostprocessor, LLMRerank, SentenceEmbeddingOptimizer
+from llama_index.postprocessor.cohere_rerank import CohereRerank
 
 
 class DocumentReader():
@@ -103,9 +104,11 @@ class RAGQueryEngine():
     def create(self, similarity_top_k, response_mode, **kwargs):
         self.set_retriever(similarity_top_k, **kwargs)
         self.set_response_synthesizer(response_mode)
+        if kwargs["use_reranker"]:
+            self.set_node_postprocessors(rerank_top_k=kwargs["rerank_top_k"])
         query_engine = RetrieverQueryEngine(
             retriever=self.retriever,
-            # node_postprocessors=self.node_postprocessor
+            node_postprocessors=self.node_postprocessor,
             response_synthesizer=self.response_synthesizer,
             )
         return query_engine
@@ -135,7 +138,7 @@ class RAGQueryEngine():
         else:
             raise NotImplementedError(f'Incorrect retriever type - {self.retriever_type}')
 
-    def set_node_postprocessors(self):
+    def set_node_postprocessors(self, rerank_top_k=2):
         # # Node postprocessor: Porcessing nodes after retrieval before passing to the LLM for generation
         # # Re-ranking step can be performed here!
         # # Nodes can be re-ordered to include more relevant ones at the top: https://python.langchain.com/docs/modules/data_connection/document_transformers/post_retrieval/long_context_reorder
@@ -147,7 +150,8 @@ class RAGQueryEngine():
         #         embed_model=service_context.embed_model, 
         #         percentile_cutoff=0.5
         #         )]
-        raise NotImplementedError
+        cohere_rerank = CohereRerank(top_n=rerank_top_k)
+        self.node_postprocessor = [cohere_rerank]
 
     def set_response_synthesizer(self, response_mode):
         # Other response modes: https://docs.llamaindex.ai/en/stable/module_guides/querying/response_synthesizers/root.html#configuring-the-response-mode
