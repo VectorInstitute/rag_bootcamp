@@ -21,8 +21,8 @@ from utils.storage_utils import RAGIndex
 
 with open(Path.home() / ".cohere_api_key", "r") as f:
     os.environ["COHERE_API_KEY"] = f.read().rstrip("\n")
-with open(Path.home() / ".hfhub_api_token", "r") as f:
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = f.read().rstrip("\n")
+# with open(Path.home() / ".hfhub_api_token", "r") as f:
+#     os.environ["HUGGINGFACEHUB_API_TOKEN"] = f.read().rstrip("\n")
 with open(Path.home() / ".openai_api_key", "r") as f:
     os.environ["OPENAI_API_KEY"] = f.read().rstrip("\n")
 
@@ -62,6 +62,10 @@ def main():
         "response_mode": "compact",
         "use_reranker": True,
         "rerank_top_k": 2,
+
+        # Evaluation config
+        "eval_llm_type": "openai",
+        "eval_llm_name": "gpt-3.5-turbo",
     }
 
     # # Set handler for debugging
@@ -173,7 +177,11 @@ def main():
         "contexts": [[node.text for node in retrieved_nodes]],
         "ground_truths": [[sample_elm['long_answer']]],
         }
-    eval_obj = RagasEval(metrics=["faithfulness", "relevancy", "recall", "precision"])
+    print(eval_data)
+    eval_obj = RagasEval(
+        metrics=["faithfulness", "relevancy", "recall", "precision"], 
+        eval_llm_type=rag_cfg["eval_llm_type"], eval_llm_name=rag_cfg["eval_llm_name"]
+        )
     eval_result = eval_obj.evaluate(eval_data)
     print(eval_result)
 

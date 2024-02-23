@@ -245,16 +245,16 @@ def validate_rag_cfg(cfg):
 
 
 class RagasEval():
-    def __init__(self, metrics):
-        self.eval_llm_type = "openai" # "cohere" # "local"
-        self.max_tokens = 5
-        self.temperature = 0
-        
-        self.openai_model = "gpt-3.5-turbo" # "gpt-4"
+    def __init__(self, metrics, eval_llm_type, eval_llm_name):
+        self.eval_llm_type = eval_llm_type # "openai", "cohere", "local"
+        self.eval_llm_name = eval_llm_name # "gpt-3.5-turbo" # "gpt-4"
 
-        self.local_embed_name = "BAAI/bge-base-en-v1.5"
-        self.local_model_path = "/home/omkar/model-weights"
-        self.local_llm_name = "Llama-2-7b-chat-hf"
+        # self.max_tokens = 5
+        # self.temperature = 1.0
+
+        # self.local_embed_name = "BAAI/bge-base-en-v1.5"
+        # self.local_model_path = "/home/omkar/model-weights"
+        # self.local_llm_name = "Llama-2-7b-chat-hf"
 
         self._prepare_embedding()
         self._prepare_llm()
@@ -267,7 +267,7 @@ class RagasEval():
     def _prepare_embedding(self):
         if self.eval_llm_type == "cohere":
             self.eval_embedding = CohereEmbeddings(
-                    model="embed-english-light-v3.0"
+                    model="embed-english-v3.0"
                     )
         elif self.eval_llm_type == "local":
             self.eval_embedding = HuggingFaceBgeEmbeddings(
@@ -283,10 +283,13 @@ class RagasEval():
                     )
         elif self.eval_llm_type == "local":
             self.eval_llm = HuggingFaceEndpoint(
-                    endpoint_url=f"{self.local_model_path}/{self.local_llm_name}",
+                    repo_id="meta-llama/Llama-2-7b-chat-hf",
+                    token=os.environ["HUGGINGFACEHUB_API_TOKEN"],
                     )
         elif self.eval_llm_type == "openai":
-            self.eval_llm = ChatOpenAI(model_name=self.openai_model)
+            self.eval_llm = ChatOpenAI(
+                model_name=self.eval_llm_name,
+                )
 
     def evaluate(self, data):
         data = self._prepare_data(data)
