@@ -8,7 +8,7 @@ class RAGLLM():
     def __init__(self, llm_type, llm_name):
         self.llm_type = llm_type
         self.llm_name = llm_name
-        self.local_model_path = "/home/omkar/model-weights"
+        self.local_model_path = "/model-weights"
 
     def load_model(self, **kwargs):
         print(f'Loading {self.llm_type} LLM model ...')

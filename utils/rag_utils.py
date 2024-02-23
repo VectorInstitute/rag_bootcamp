@@ -3,6 +3,7 @@ import re
 import numpy as np
 
 from tqdm import tqdm
+from pathlib import Path
 from llama_index.core import (
     SimpleDirectoryReader, VectorStoreIndex, PromptTemplate, 
     load_index_from_storage, get_response_synthesizer, download_loader,
@@ -16,6 +17,27 @@ from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SimilarityPostprocessor, LLMRerank, SentenceEmbeddingOptimizer
 from llama_index.postprocessor.cohere_rerank import CohereRerank
+from langchain_community.chat_models import ChatCohere
+from langchain_community.embeddings import CohereEmbeddings
+from langchain_community.llms import HuggingFaceEndpoint
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from langchain_openai.chat_models import ChatOpenAI
+from datasets import Dataset
+from ragas.metrics import (
+        answer_relevancy,
+        faithfulness,
+        context_recall,
+        context_precision
+        )
+from ragas import evaluate as ragas_evaluate
+
+
+RAGAS_METRIC_MAP = {
+        "faithfulness": faithfulness,
+        "relevancy": answer_relevancy,
+        "recall": context_recall,
+        "precision": context_precision
+        }
 
 
 class DocumentReader():
@@ -220,3 +242,58 @@ def validate_rag_cfg(cfg):
         assert cfg["hybrid_search_alpha"] is not None, "hybrid_search_alpha cannot be None if query_mode is set to 'hybrid'"
     if cfg["vector_db_type"] == "weaviate":
         assert cfg["weaviate_url"] is not None, "weaviate_url cannot be None for weaviate vector db"
+
+
+class RagasEval():
+    def __init__(self, metrics):
+        self.eval_llm_type = "openai" # "cohere" # "local"
+        self.max_tokens = 5
+        self.temperature = 0
+        
+        self.openai_model = "gpt-3.5-turbo" # "gpt-4"
+
+        self.local_embed_name = "BAAI/bge-base-en-v1.5"
+        self.local_model_path = "/home/omkar/model-weights"
+        self.local_llm_name = "Llama-2-7b-chat-hf"
+
+        self._prepare_embedding()
+        self._prepare_llm()
+
+        self.metrics = [RAGAS_METRIC_MAP[elm] for elm in metrics]
+
+    def _prepare_data(self, data):
+        return Dataset.from_dict(data)
+
+    def _prepare_embedding(self):
+        if self.eval_llm_type == "cohere":
+            self.eval_embedding = CohereEmbeddings(
+                    model="embed-english-light-v3.0"
+                    )
+        elif self.eval_llm_type == "local":
+            self.eval_embedding = HuggingFaceBgeEmbeddings(
+                    model_name=self.local_embed_name,
+                    )
+        elif self.eval_llm_type == "openai":
+            self.eval_embedding = None
+    
+    def _prepare_llm(self):
+        if self.eval_llm_type == "cohere":
+            self.eval_llm = ChatCohere(
+                    model="command",
+                    )
+        elif self.eval_llm_type == "local":
+            self.eval_llm = HuggingFaceEndpoint(
+                    endpoint_url=f"{self.local_model_path}/{self.local_llm_name}",
+                    )
+        elif self.eval_llm_type == "openai":
+            self.eval_llm = ChatOpenAI(model_name=self.openai_model)
+
+    def evaluate(self, data):
+        data = self._prepare_data(data)
+        result = ragas_evaluate(
+                    data,
+                    metrics=self.metrics,
+                    embeddings=self.eval_embedding,
+                    llm=self.eval_llm,
+                )
+        return result
