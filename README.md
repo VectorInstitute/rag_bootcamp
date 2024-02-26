@@ -18,7 +18,7 @@ git clone https://github.com/VectorInstitute/rag_bootcamp
 
 ## Create virtual environments
 
-You don't need to do this! We have virtual environments pre-compiled on the Vector cluster in `/ssd003/projects/aieng/public/rag_bootcamp/envs`. If you are running a workflow locally, look in the appendix for instructions.
+If you are using the Vector cluster, we have virtual environments pre-compiled `/ssd003/projects/aieng/public/rag_bootcamp/envs`. If you are running a workflow locally, look in the appendix for instructions.
 
 ## Add the Jupyter notebook kernels
 
@@ -50,6 +50,9 @@ This repository includes several reference implementations showing different app
 - [**Cloud Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/cloud_search): Retrieve information from data in a cloud service, in this example AWS S3 storage
 - [**Local Llama2**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/local_llama2): Use an on-prem, fully open-source and locally hosted Llama2-7B model to run a full RAG workflow for document search and retrieval
 - [**PubMed QA**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/pubmed_qa): A full pipeline on the [PubMed](https://pubmed.ncbi.nlm.nih.gov/download/) dataset demonstrating ingestion, embeddings, vector index/storage, retrieval, reranking, with a focus on evaluation metrics.
+
+
+# Appendix
 
 ## (Optional) Build the Python environments
  
