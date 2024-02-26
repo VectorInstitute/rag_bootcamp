@@ -81,7 +81,7 @@ langchain-community==0.0.17
 langchain-core==0.1.18
 langsmith==0.0.86
 lit==17.0.6
-llama-index==0.9.44
+llama-index==0.9.15.post2
 lz4==4.3.3
 MarkupSafe==2.1.5
 marshmallow==3.20.2
