@@ -120,7 +120,7 @@ class RAGQueryEngine():
         self.index = vector_index
         self.llm_model_name = llm_model_name
         self.retriever = None
-        self.node_postprocessors = None
+        self.node_postprocessor = None
         self.response_synthesizer = None
 
     def create(self, similarity_top_k, response_mode, **kwargs):
@@ -249,8 +249,7 @@ class RagasEval():
         self.eval_llm_type = eval_llm_type # "openai", "cohere", "local"
         self.eval_llm_name = eval_llm_name # "gpt-3.5-turbo" # "gpt-4"
 
-        # self.max_tokens = 5
-        # self.temperature = 1.0
+        self.temperature = 0.0
 
         # self.local_embed_name = "BAAI/bge-base-en-v1.5"
         # self.local_model_path = "/home/omkar/model-weights"
@@ -289,6 +288,7 @@ class RagasEval():
         elif self.eval_llm_type == "openai":
             self.eval_llm = ChatOpenAI(
                 model_name=self.eval_llm_name,
+                temperature=self.temperature,
                 )
 
     def evaluate(self, data):
