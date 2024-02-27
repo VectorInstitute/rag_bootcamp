@@ -1,0 +1,1 @@
+This study represents a subset of a complete data set, considering only those children aged admitted to the Pediatric Surgery and Pediatric Nephrology Clinics during the period January 2011 to July 2012. In this study, we have determined that the QT interval changes significantly depending on the use of oxybutynin. The QT changes increased cardiac arrhythmia in children.

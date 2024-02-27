@@ -7,7 +7,7 @@ rag_venv/
 .ipynb_checkpoints/
 
 # data folders
-data/
+# data/
 */source-materials/
 
 # keys
