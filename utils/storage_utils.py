@@ -39,7 +39,7 @@ class RAGIndex():
             vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
         elif self.db_type == 'weaviate':
             # weaviate_client = weaviate.Client("http://localhost:8080") # local instance
-            with open(Path.home() / ".weaviate_api_key", "r") as f:
+            with open(Path.home() / ".weaviate.key", "r") as f:
                 weaviate_api_key = f.read().rstrip("\n")
             weaviate_client = weaviate.Client(
                 url=kwargs["weaviate_url"], 
