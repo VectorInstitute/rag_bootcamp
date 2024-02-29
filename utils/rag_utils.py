@@ -82,9 +82,10 @@ class DocumentReader():
 
 class RAGEmbedding():
     '''
-    Llama-index supports embedding models from OpenAI, Cohere, LangChain, HuggingFace, etc. 
-    We can also build out custom embedding model. 
+    LlamaIndex supports embedding models from OpenAI, Cohere, HuggingFace, etc.
     https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings.html
+    We can also build out custom embedding model: 
+    https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings.html#custom-embedding-model
     '''
     def __init__(self, model_type, model_name):
         self.model_type = model_type
