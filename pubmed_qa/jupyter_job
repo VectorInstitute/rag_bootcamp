@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --gres=gpu:1
+#SBATCH --qos=a40_rag
 #SBATCH -c 4
 #SBATCH -p a40
 #SBATCH --mem=32G

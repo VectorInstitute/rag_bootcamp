@@ -2,7 +2,7 @@ from llama_index.llms.huggingface import HuggingFaceLLM
 
 class RAGLLM():
     '''
-    Llama-index supports OpenAI, Cohere, AI21 and HuggingFace LLMs
+    LlamaIndex supports OpenAI, Cohere, AI21 and HuggingFace LLMs
     https://docs.llamaindex.ai/en/stable/module_guides/models/llms/usage_custom.html
     '''
     def __init__(self, llm_type, llm_name):

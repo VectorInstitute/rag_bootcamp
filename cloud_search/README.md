@@ -8,11 +8,8 @@ In this demo, we use a data loader from [Llama Hub](https://llamahub.ai/) to acc
 
 * Python 3.10+
 * Cohere API key saved in your home directory at `~/.cohere.key`
-* AWS API key saved in your home directory at `~/.aws.key` in the following format:
+* AWS API key saved in your home directory at `~/.aws/credentials` in the following format:
 
-```
-{
-    "access_key": "...",
-    "secret_key": "..."
-}
-```
+[default]
+aws_access_key_id = YOUR_ACCESS_KEY
+aws_secret_access_key = YOUR_SECRET_KEY
