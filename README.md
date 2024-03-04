@@ -72,8 +72,8 @@ python3 -m pip install -r rag_dataloaders/requirements.txt
 deactivate
 
 # Install the pubmed_qa environment
-python3 -m venv ./rag_pubmed_qa_env
-source rag_pubmed_qa_env/bin/activate
+python3 -m venv ./rag_pubmed_qa
+source rag_pubmed_qa/bin/activate
 python3 -m pip install -r rag_pubmed_qa/requirements.txt
 deactivate
 ```
