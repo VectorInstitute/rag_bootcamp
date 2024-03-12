@@ -16,9 +16,9 @@ Start by cloning this git repository to a local folder:
 git clone https://github.com/VectorInstitute/rag_bootcamp
 ```
 
-## Create virtual environments
+## (Optional) Build the virtual Python environments
 
-If you are using the Vector cluster, we have virtual environments pre-compiled `/ssd003/projects/aieng/public/rag_bootcamp/envs`. If you are running a workflow locally, look in the appendix for instructions.
+If you are using the Vector cluster, we have virtual environments pre-compiled `/ssd003/projects/aieng/public/rag_bootcamp/envs`. If you are running a workflow outside of the Vector cluster, look in the appendix for instructions.
 
 ## Add the Jupyter notebook kernels
 
@@ -31,9 +31,20 @@ source rag_dataloaders/bin/activate
 ipython kernel install --user --name=rag_dataloaders
 deactivate
 
+source rag_local/bin/activate
+ipython kernel install --user --name=rag_local
+deactivate
+
 source rag_pubmed_qa/bin/activate
 ipython kernel install --user --name=rag_pubmed_qa
 deactivate
+```
+
+## Lastly, start a Jupyter notebook
+
+```
+cd rag_bootcamp
+jupyter notebook --ip $(hostname --fqdn)
 ```
 
 ## Reference Implementations
@@ -44,17 +55,18 @@ This repository includes several reference implementations showing different app
 - [**Document Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/document_search): Use a collection of unstructured documents to answer domain-specific questions, like: "How many AI scholarships did Vector Institute award in 2022?"
 - [**SQL Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/sql_search): Answer natural language questions with information from structured relational data. This demo uses a financial dataset from a Portugese banking instituation, [available on Kaggle](https://www.kaggle.com/datasets/prakharrathi25/banking-dataset-marketing-targets)
 - [**Cloud Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/cloud_search): Retrieve information from data in a cloud service, in this example AWS S3 storage
+- [**Local Llama2**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/local_llama2): Use an on-prem, fully open-source and locally hosted Llama2-7B model to run a full RAG workflow for document search and retrieval
 - [**PubMed QA**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/pubmed_qa): A full pipeline on the [PubMed](https://pubmed.ncbi.nlm.nih.gov/download/) dataset demonstrating ingestion, embeddings, vector index/storage, retrieval, reranking, with a focus on evaluation metrics.
 
 
 # Appendix
 
-## (Optional) Build the Python environments
+## (Optional) Build the virtual Python environments
  
 **These instructions only apply if you are not running this code on the Vector Institute cluster.** If you are are working on the Vector cluster, these environments are already installed and ready to use.
 
 Requirements:
- - Python 3.10
+ - Python 3.10+
 
 The notebooks contained in this repository depending on several different Python environments. Build these environments using the following instructions: 
 
@@ -62,14 +74,18 @@ The notebooks contained in this repository depending on several different Python
 cd envs
 python3 --version # Make sure this shows Python 3.10+!
 
-python3 -m venv rag_dataloaders
-python3 -m venv rag_pubmed_qa
-
 # Install the dataloaders environment
 python3 -m venv ./rag_dataloaders
 source rag_dataloaders/bin/activate
 python3 -m pip install -r rag_dataloaders/requirements.txt
 deactivate
+
+# Install the local environment
+python3 -m venv ./rag_local
+source rag_local/bin/activate
+python3 -m pip install -r rag_local/requirements.txt
+deactivate
+
 
 # Install the pubmed_qa environment
 python3 -m venv ./rag_pubmed_qa
