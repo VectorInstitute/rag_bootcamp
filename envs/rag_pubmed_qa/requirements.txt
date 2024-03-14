@@ -9,3 +9,4 @@ langchain_openai==0.0.6
 ragas==0.1.2
 sentence-transformers==2.4.0
 jupyter==1.0.0
+faiss-gpu==1.7.2

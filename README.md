@@ -14,6 +14,7 @@ This repository includes several reference implementations showing different app
 - [**Cloud Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/cloud_search): Retrieve information from data in a cloud service, in this example AWS S3 storage
 - [**Local Llama2**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/local_llama2): Use an on-prem, fully open-source and locally hosted Llama2-7B model to run a full RAG workflow for document search and retrieval
 - [**PubMed QA**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/pubmed_qa): A full pipeline on the [PubMed](https://pubmed.ncbi.nlm.nih.gov/download/) dataset demonstrating ingestion, embeddings, vector index/storage, retrieval, reranking, with a focus on evaluation metrics.
+- [**RAG Evaluation**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/rag_evaluation): RAG evaluation techniques based on the [Ragas](https://github.com/explodinggradients/ragas) framework. Focuses on evaluation "test sets" and how to use these to determine how well a RAG pipeline is actually working.
  
 ## Requirements
 
