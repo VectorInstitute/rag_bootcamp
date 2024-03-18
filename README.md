@@ -44,6 +44,12 @@ source rag_dataloaders/bin/activate
 python3 -m pip install -r rag_dataloaders/requirements.txt
 deactivate
 
+# Install the evaluation environment
+python3 -m venv ./rag_evaluation
+source rag_evaluation/bin/activate
+python3 -m pip install -r rag_evaluation/requirements.txt
+deactivate
+
 # Install the local environment
 python3 -m venv ./rag_local
 source rag_local/bin/activate
@@ -68,6 +74,10 @@ source rag_dataloaders/bin/activate
 ipython kernel install --user --name=rag_dataloaders
 deactivate
 
+source rag_evaluation/bin/activate
+ipython kernel install --user --name=rag_evaluation
+deactivate
+
 source rag_local/bin/activate
 ipython kernel install --user --name=rag_local
 deactivate
@@ -81,5 +91,6 @@ deactivate
 
 ```
 cd rag_bootcamp
+source envs/rag_local/bin/activate
 jupyter notebook --ip $(hostname --fqdn)
 ```
