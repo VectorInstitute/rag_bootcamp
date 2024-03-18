@@ -2,21 +2,8 @@ from llama_index.core import (
     VectorStoreIndex, load_index_from_storage, get_response_synthesizer, download_loader,
 )
 from llama_index.core.storage.storage_context import StorageContext
-from llama_index.vector_stores.weaviate import WeaviateVectorStore
-from llama_index.vector_stores.chroma import ChromaVectorStore
 import os
 from pathlib import Path
-
-try:
-    import chromadb
-except Exception:
-    print(f"The chromadb package is not available on this system, skipping")
-
-try:
-    import weaviate
-except Exception:
-    print(f"The weaviate package is not available on this system, skipping")
-
 
 
 class RAGIndex():

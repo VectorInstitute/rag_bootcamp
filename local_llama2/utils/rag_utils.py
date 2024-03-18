@@ -16,9 +16,6 @@ from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SimilarityPostprocessor, LLMRerank, SentenceEmbeddingOptimizer
-from llama_index.postprocessor.cohere_rerank import CohereRerank
-from langchain_community.chat_models import ChatCohere
-from langchain_community.embeddings import CohereEmbeddings
 from langchain_community.llms import HuggingFaceEndpoint
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
