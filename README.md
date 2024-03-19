@@ -35,7 +35,10 @@ git clone https://github.com/VectorInstitute/rag_bootcamp
 The notebooks contained in this repository depend on several different Python environments. Build these environments using the following instructions: 
 
 ```
-cd rag_bootcamp/envs
+# The following path is for use on the Vector cluster. If you are using a different environment, update this accordingly.
+export RAG_BOOTCAMP_SRC="/ssd003/projects/aieng/public/rag_bootcamp"
+
+cd $RAG_BOOTCAMP_SRC/envs
 python3 --version # Make sure this shows Python 3.10+!
 
 # Install the dataloaders environment
@@ -68,21 +71,22 @@ deactivate
 These kernels are required for the notebooks in this repository. You can make them available to Jupyter with the following instructions:
 
 ```
-cd rag_bootcamp/envs
+# The following path is for use on the Vector cluster. If you are using a different environment, update this accordingly.
+export RAG_BOOTCAMP_SRC="/ssd003/projects/aieng/public/rag_bootcamp"
 
-source rag_dataloaders/bin/activate
+source $RAG_BOOTCAMP_SRC/envs/rag_dataloaders/bin/activate
 ipython kernel install --user --name=rag_dataloaders
 deactivate
 
-source rag_evaluation/bin/activate
+source $RAG_BOOTCAMP_SRC/envs/rag_evaluation/bin/activate
 ipython kernel install --user --name=rag_evaluation
 deactivate
 
-source rag_local/bin/activate
+source $RAG_BOOTCAMP_SRC/envs/rag_local/bin/activate
 ipython kernel install --user --name=rag_local
 deactivate
 
-source rag_pubmed_qa/bin/activate
+source $RAG_BOOTCAMP_SRC/envs/rag_pubmed_qa/bin/activate
 ipython kernel install --user --name=rag_pubmed_qa
 deactivate
 ```
@@ -90,7 +94,9 @@ deactivate
 ## Lastly, start a Jupyter notebook
 
 ```
-cd rag_bootcamp
-source envs/rag_local/bin/activate
+# The following path is for use on the Vector cluster. If you are using a different environment, update this accordingly.
+export RAG_BOOTCAMP_SRC="/ssd003/projects/aieng/public/rag_bootcamp"
+
+source $RAG_BOOTCAMP_SRC/envs/rag_local/bin/activate
 jupyter notebook --ip $(hostname --fqdn)
 ```
