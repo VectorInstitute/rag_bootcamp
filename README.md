@@ -6,7 +6,7 @@ This is a collection of reference implementations for Vector Institute's **RAG (
 
 This repository includes several reference implementations showing different approaches and methodologies related to Retrieval-Augmented Generation.
 
-- [**Web Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/web_search): Popular LLMs like OpenAI and Llama3 are very good at processing natural language, but their knowledge is limited by the data they were trained on. As of November 2024, neither service can correctly answer the question "Who won the 2024 World Series of Baseball?"
+- [**Web Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/web_search): Popular LLMs like OpenAI's GPT-4o and Meta's Llama-3 are very good at processing natural language, but their knowledge is limited by the data they were trained on. As of November 2024, neither service can correctly answer the question "Who won the 2024 World Series of Baseball?"
 - [**Document Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/document_search): Use a collection of unstructured documents to answer domain-specific questions, like: "How many AI scholarships did Vector Institute award in 2022?"
 - [**SQL Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/sql_search): Answer natural language questions with information from structured relational data. This demo uses a financial dataset from a Portugese banking instituation, [available on Kaggle](https://www.kaggle.com/datasets/prakharrathi25/banking-dataset-marketing-targets)
 - [**Cloud Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/cloud_search): Retrieve information from data in a cloud service, in this example AWS S3 storage
@@ -16,7 +16,7 @@ This repository includes several reference implementations showing different app
 ## Requirements
 
 * Python 3.10+
-  
+
 ## Git Repostory
 
 Start by cloning this git repository to a local folder:
@@ -25,7 +25,7 @@ Start by cloning this git repository to a local folder:
 git clone https://github.com/VectorInstitute/rag_bootcamp
 ```
 
-## (Optional) Build the virtual Python environments
+## [Optional] Build the virtual Python environments
 
 **These instructions only apply if you are not running this code on the Vector Institute cluster.** If you are are working on the Vector cluster, these environments are already pre-compiled and ready to use in the `/ssd003/projects/aieng/public/rag_bootcamp/envs` folder.
 
@@ -40,28 +40,24 @@ The notebooks contained in this repository depend on several different Python en
 Build these environments using the following instructions: 
 
 ```
-# The following path is for use on the Vector cluster. If you are using a different environment, update this accordingly.
-export RAG_BOOTCAMP_SRC="/ssd003/projects/aieng/public/rag_bootcamp"
-
-cd $RAG_BOOTCAMP_SRC/envs
 python3 --version # Make sure this shows Python 3.10+!
 
 # Install the dataloaders environment
 python3 -m venv ./rag_dataloaders
 source rag_dataloaders/bin/activate
-python3 -m pip install -r rag_dataloaders/requirements.txt
+python3 -m pip install -r ./envs/rag_dataloaders/requirements.txt
 deactivate
 
 # Install the evaluation environment
 python3 -m venv ./rag_evaluation
 source rag_evaluation/bin/activate
-python3 -m pip install -r rag_evaluation/requirements.txt
+python3 -m pip install -r ./envs/rag_evaluation/requirements.txt
 deactivate
 
 # Install the pubmed_qa environment
 python3 -m venv ./rag_pubmed_qa
 source rag_pubmed_qa/bin/activate
-python3 -m pip install -r rag_pubmed_qa/requirements.txt
+python3 -m pip install -r ./envs/rag_pubmed_qa/requirements.txt
 deactivate
 ```
 
@@ -71,17 +67,17 @@ These kernels are required for the notebooks in this repository. You can make th
 
 ```
 # The following path is for use on the Vector cluster. If you are using a different environment, update this accordingly.
-export RAG_BOOTCAMP_SRC="/ssd003/projects/aieng/public/rag_bootcamp"
+export RAG_BOOTCAMP_ENV="/ssd003/projects/aieng/public/rag_bootcamp/envs"
 
-source $RAG_BOOTCAMP_SRC/envs/rag_dataloaders/bin/activate
+source $RAG_BOOTCAMP_ENV/rag_dataloaders/bin/activate
 ipython kernel install --user --name=rag_dataloaders
 deactivate
 
-source $RAG_BOOTCAMP_SRC/envs/rag_evaluation/bin/activate
+source $RAG_BOOTCAMP_ENV/rag_evaluation/bin/activate
 ipython kernel install --user --name=rag_evaluation
 deactivate
 
-source $RAG_BOOTCAMP_SRC/envs/rag_pubmed_qa/bin/activate
+source $RAG_BOOTCAMP_ENV/rag_pubmed_qa/bin/activate
 ipython kernel install --user --name=rag_pubmed_qa
 deactivate
 ```
@@ -90,8 +86,8 @@ deactivate
 
 ```
 # The following path is for use on the Vector cluster. If you are using a different environment, update this accordingly.
-export RAG_BOOTCAMP_SRC="/ssd003/projects/aieng/public/rag_bootcamp"
+export RAG_BOOTCAMP_ENV="/ssd003/projects/aieng/public/rag_bootcamp/envs"
 
-source $RAG_BOOTCAMP_SRC/envs/rag_local/bin/activate
+source $RAG_BOOTCAMP_ENV/<env_to_be_used>/bin/activate
 jupyter notebook --ip $(hostname --fqdn)
 ```
