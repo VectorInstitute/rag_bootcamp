@@ -1,25 +1,23 @@
-# RAG Bootcamp: Document Search
+# RAG Bootcamp: Evaluation Techniques
 
-This is a reference implementations for Vector Institute's **RAG (Retrieval-Augmented Generation) Bootcamp**, taking place from Nov 2024 to Jan 2025. Popular LLMs like OpenAI's GPT-4o and Meta's Llama-3 are very good at natural language and sounding like humans, but their knowledge is limited by the data they were trained on. 
-
-In this demo, we use a collection of unstructured documents to answer domain-specific questions, like: *How many AI scholarships did Vector Institute award in 2022?*. We augment a Llama-3 LLM request with an unstructured PDF document search to get the correct answer: **Vector Institute awarded 109 AI scholarships in 2022**
+This notebook presents a RAG workflow for the [PubMed QA](https://pubmedqa.github.io/) task using [LlamaIndex](https://www.llamaindex.ai/). The code is written in a configurable fashion, giving you the flexibility to edit the RAG configuration and observe the change in output/responses. It serves as a good template for various RAG workflows.
 
 ## Requirements
 
 1. Python 3.10+
-2. If running on the Vector cluster, load the `rag_dataloaders` env:
+2. If running on the Vector cluster, load the `rag_pubmed_qa` env:
     ```bash
-    source /ssd003/projects/aieng/public/rag_bootcamp/envs/rag_dataloaders/bin/activate
+    source /ssd003/projects/aieng/public/rag_bootcamp/envs/rag_pubmed_qa/bin/activate
     ```
    **[Alternate]** Otherwise, create your own env and install packages using the `requirements.txt` file (make sure to run these commands in the top level dir of the repository):
     ```bash
-    python3 -m venv ./rag_dataloaders
-    source rag_dataloaders/bin/activate
-    python3 -m pip install -r ./envs/rag_dataloaders/requirements.txt
+    python3 -m venv ./rag_pubmed_qa
+    source rag_pubmed_qa/bin/activate
+    python3 -m pip install -r ./envs/rag_pubmed_qa/requirements.txt
     ```
 3. Install the jupyter kernel:
     ```bash
-    ipython kernel install --user --name=rag_dataloaders
+    ipython kernel install --user --name=rag_pubmed_qa
     ```
 4. If you are accessing the LLMs and embedding models through Vector AI Engineering's **Kaleidoscope Service** (Vector Inference + Autoscaling), you will need to set the KScope env variables:
     - Request a KScope API Key:
