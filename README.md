@@ -6,7 +6,7 @@ This is a collection of reference implementations for Vector Institute's **RAG (
 
 This repository includes several reference implementations showing different approaches and methodologies related to Retrieval-Augmented Generation.
 
-- [**Web Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/web_search): Popular LLMs like Cohere and OpenAI are very good at processing natural language, but their knowledge is limited by the data they were trained on. As of January 2024, neither service can correctly answer the question "Who won the 2023 World Series of Baseball?"
+- [**Web Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/web_search): Popular LLMs like OpenAI and Llama3 are very good at processing natural language, but their knowledge is limited by the data they were trained on. As of November 2024, neither service can correctly answer the question "Who won the 2024 World Series of Baseball?"
 - [**Document Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/document_search): Use a collection of unstructured documents to answer domain-specific questions, like: "How many AI scholarships did Vector Institute award in 2022?"
 - [**SQL Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/sql_search): Answer natural language questions with information from structured relational data. This demo uses a financial dataset from a Portugese banking instituation, [available on Kaggle](https://www.kaggle.com/datasets/prakharrathi25/banking-dataset-marketing-targets)
 - [**Cloud Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/cloud_search): Retrieve information from data in a cloud service, in this example AWS S3 storage
