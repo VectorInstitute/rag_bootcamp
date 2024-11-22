@@ -17,3 +17,6 @@ rag_venv/
 # cache
 __pycache__/
 old/
+
+.env
+logs/
