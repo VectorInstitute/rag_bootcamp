@@ -29,7 +29,15 @@ git clone https://github.com/VectorInstitute/rag_bootcamp
 
 **These instructions only apply if you are not running this code on the Vector Institute cluster.** If you are are working on the Vector cluster, these environments are already pre-compiled and ready to use in the `/ssd003/projects/aieng/public/rag_bootcamp/envs` folder.
 
-The notebooks contained in this repository depend on several different Python environments. Build these environments using the following instructions: 
+The notebooks contained in this repository depend on several different Python environments. Following table lists the environment for each notebook:
+
+| Notebooks  | Environment  |
+| ---------------------  | -------------------  |
+| [**Web Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/web_search), [**Document Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/document_search), [**SQL Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/sql_search), [**Cloud Search**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/cloud_search)  | ```rag_dataloaders```  |
+| [**RAG Evaluation**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/rag_evaluation)  | ```rag_evaluation```  |
+| [**PubMed QA**](https://github.com/VectorInstitute/rag_bootcamp/tree/main/pubmed_qa)  | ```rag_pubmed_qa```  |
+
+Build these environments using the following instructions: 
 
 ```
 # The following path is for use on the Vector cluster. If you are using a different environment, update this accordingly.
