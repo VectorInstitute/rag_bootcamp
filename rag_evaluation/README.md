@@ -13,4 +13,4 @@ There are also many different metrics to determine if a RAG workflow is producin
 ## Requirements
 
 * Python 3.10+
-* OpenAI API key saved in your home directory at `~/.openai.key`
+* OpenAI API key
