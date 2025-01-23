@@ -18,9 +18,13 @@ class PubMedQATaskDataset(data.Dataset):
                 self.name,
                 f"{subset_str.format(fold_id=fold_id)}_bigbio_qa",
                 split=split,
+                trust_remote_code=True,
             )
             s_data = load_dataset(
-                self.name, f"{subset_str.format(fold_id=fold_id)}_source", split=split
+                self.name,
+                f"{subset_str.format(fold_id=fold_id)}_source",
+                split=split,
+                trust_remote_code=True,
             )
             bigbio_data.append(bb_data)
             source_data.append(s_data)
